@@ -11,7 +11,7 @@
   top: 0;
   z-index: 40;
   padding: 18px 0;
-  background: linear-gradient(to bottom, #434749, transparent 15%);
+  background: linear-gradient(to bottom, #232d32, transparent 15%);
   transition:
     background 220ms ease,
     box-shadow 220ms ease,
@@ -43,7 +43,7 @@
   text-align: center;
   font-size: 0.82rem;
   color: var(--text-soft);
-  border-top: 1px solid #1C2C37, transparent 95%;
+  border-top: 1px solid #304a5b, transparent 95%;
   background: radial-gradient(circle at top right, #111B22, transparent 55%),
     #1C2C37, transparent 25%;
 }
@@ -53,7 +53,7 @@
   align-items: center;
   gap: 8px;
   padding: 0;
-  margin-left: -88px; 
+  margin-left: -150px; 
   background: transparent;
   border: none;
   box-shadow: none;
@@ -256,7 +256,7 @@ main {
 .hero-section {
   position: relative;
   background-image: 
-    linear-gradient(120deg, rgba(89, 177, 186, 0.25), rgba(89, 177, 186, 0.25)),
+    linear-gradient(120deg, rgba(58, 75, 75, 0.1), rgba(58, 75, 75, 0.1), transparent 20%),
     var(--hero-bg-image);
     
   background-position: center 40%;
@@ -290,12 +290,12 @@ main {
 .hero-logos-block {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 20px;
 }
 
 .hero-logo-left {
   width: 160px;
-  height: 192px;
+  height: 145px;
   border-radius: 18px;
   background: transparent;
   box-shadow: none;
@@ -308,7 +308,7 @@ main {
 
 .hero-logo-center {
   width: 160px;
-  height: 188px;
+  height: 145px;
   border-radius: 10px;
   border: none;
   background: transparent;
