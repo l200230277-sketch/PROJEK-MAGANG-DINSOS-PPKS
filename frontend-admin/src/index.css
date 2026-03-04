@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-body: #1e3430;
+  --bg-body: #182229;
   --bg-surface: rgba(12, 35, 33, 0.9);
   --bg-surface-alt: rgba(14, 44, 41, 0.96);
   --accent-primary: #33b86c;
   --accent-secondary: #f3c548;
-  --accent-soft: rgba(51, 184, 108, 0.18);
+  --accent-soft: rgba(107, 183, 140, 0.18);
   --text-main: #f5f7fb;
   --text-soft: #c5d0d4;
   --border-subtle: rgba(255, 255, 255, 0.06);
@@ -41,7 +41,7 @@ body {
 body {
   color: var(--text-main);
   background:
-    radial-gradient(circle at top, #23493f 0, transparent 55%),
+    radial-gradient(circle at top, #1C2C37 0, transparent 45%),
     radial-gradient(circle at bottom, #07120f 0, transparent 60%),
     var(--bg-body);
 }
