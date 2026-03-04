@@ -55,7 +55,7 @@ export default function LoginPage({ onLogin }) {
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0,0,0,0.34)',
+          background: 'rgba(0,0,0,0.54)',
           zIndex: 0,
         }}
       />
@@ -112,7 +112,12 @@ export default function LoginPage({ onLogin }) {
               fontSize: '1rem',
             }}
           >
-            👤
+            <span style={{ position: 'absolute', left: '0.15rem', top: '50%', transform: 'translateY(-50%)', color: '#aaa', display: 'flex' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+            </span>
           </span>
           <input
             type="text"
@@ -145,7 +150,12 @@ export default function LoginPage({ onLogin }) {
               fontSize: '1rem',
             }}
           >
-            🔑
+            <span style={{ position: 'absolute', left: '0.15rem', top: '50%', transform: 'translateY(-50%)', color: '#aaa', display: 'flex' }}>
+             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+             </svg>
+            </span>
           </span>
           <input
             type="password"
