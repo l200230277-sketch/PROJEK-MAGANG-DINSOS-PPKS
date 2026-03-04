@@ -11,7 +11,7 @@
   top: 0;
   z-index: 40;
   padding: 18px 0;
-  background: linear-gradient(to bottom, #434749, transparent 15%);
+  background: linear-gradient(to bottom, #232d32, transparent 15%);
   transition:
     background 220ms ease,
     box-shadow 220ms ease,
@@ -43,7 +43,7 @@
   text-align: center;
   font-size: 0.82rem;
   color: var(--text-soft);
-  border-top: 1px solid #1C2C37, transparent 95%;
+  border-top: 1px solid #304a5b, transparent 95%;
   background: radial-gradient(circle at top right, #111B22, transparent 55%),
     #1C2C37, transparent 25%;
 }
@@ -53,7 +53,7 @@
   align-items: center;
   gap: 8px;
   padding: 0;
-  margin-left: -88px; 
+  margin-left: -150px; 
   background: transparent;
   border: none;
   box-shadow: none;
@@ -186,7 +186,7 @@ main {
   padding-top: 88px;
 }
 
-.section {
+.section {            
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -200,10 +200,11 @@ main {
 }
 
 .section-inner {
-  max-width: 1120px;
+  max-width: 1400px;
   margin: 0 auto;
   padding-inline: 20px;
 }
+
 
 .section-header {
   margin-bottom: 32px;
@@ -227,6 +228,7 @@ main {
 
 .section-title {
   font-size: clamp(1.8rem, 2.6vw, 2.35rem);
+  text-align: center;
   margin: 0;
 }
 
@@ -256,7 +258,7 @@ main {
 .hero-section {
   position: relative;
   background-image: 
-    linear-gradient(120deg, rgba(89, 177, 186, 0.25), rgba(89, 177, 186, 0.25)),
+    linear-gradient(120deg, rgba(58, 75, 75, 0.1), rgba(58, 75, 75, 0.1), transparent 20%),
     var(--hero-bg-image);
     
   background-position: center 40%;
@@ -290,12 +292,12 @@ main {
 .hero-logos-block {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 20px;
 }
 
 .hero-logo-left {
   width: 160px;
-  height: 192px;
+  height: 145px;
   border-radius: 18px;
   background: transparent;
   box-shadow: none;
@@ -308,7 +310,7 @@ main {
 
 .hero-logo-center {
   width: 160px;
-  height: 188px;
+  height: 145px;
   border-radius: 10px;
   border: none;
   background: transparent;
@@ -450,22 +452,30 @@ main {
   border: 1px solid rgba(202, 220, 224, 0.6);
   box-shadow: var(--shadow-soft);
   color: #ffffff;
+  padding: 7px;
+  max-width: 280px;
+  max-height: 480px;
+  margin-left: 120px;
 }
 
 .ppks-table-header h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+
 }
 
 .ppks-table-header p {
-  margin: 2px 0 10px;
-  font-size: 0.9rem;
+  margin: 1px 0 10px;
+  font-size: 0.8rem;
+  text-align: center;
 }
 
 .ppks-table {
-  width: 100%;
+  width: 90%;
+  margin-left: 15px;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.6rem;
 }
 
 .ppks-table-wrapper {
@@ -489,6 +499,12 @@ main {
   font-size: 0.8rem;
   color: var(--text-soft);
 }
+.ppks-table-down {
+  margin-top: 5px;
+  margin-left: 18px;
+  font-size: 0.6rem;
+  color: var(--text-soft);
+}
 
 .map-card {
   border-radius: var(--radius-lg);
@@ -497,6 +513,7 @@ main {
   border: 1px solid rgba(137, 199, 255, 0.3);
   box-shadow: var(--shadow-soft);
   overflow: hidden;
+  width: 1000px;
 }
 
 .map-surface {
@@ -515,7 +532,8 @@ main {
 .leaflet-map {
   width: 100%;
   height: 100%;
-  min-height: 320px;
+  min-height: 530px;
+  min-width: 100px; 
 }
 
 .map-grid {
