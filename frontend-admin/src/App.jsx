@@ -3,7 +3,6 @@ import { NavLink, Route, Routes, useLocation, useNavigate, Navigate } from 'reac
 import './App.css'
 import Home from './pages/Home.jsx'
 import PPKSMapPage from './pages/PPKSMapPage.jsx'
-import ContactPage from './pages/ContactPage.jsx'
 import KelolaPPKSPage from './pages/KelolaPPKS.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import logoBoyolali from './assets/logo-boyolali.png'
@@ -95,7 +94,7 @@ function App() {
               Kelola PPKS
             </NavLink>
             <button className="nav-logout-btn" onClick={handleLogout} aria-label="Logout">
-              Logout
+              Keluar
             </button>
           </nav>
         </div>
@@ -106,7 +105,6 @@ function App() {
           <Route path="/" element={<ProtectedRoute isLoggedIn={isLoggedIn}><Home heroTransform={heroTransform} /></ProtectedRoute>} />
           <Route path="/ppks" element={<ProtectedRoute isLoggedIn={isLoggedIn}><PPKSMapPage /></ProtectedRoute>} />
           <Route path="/kelola-ppks" element={<ProtectedRoute isLoggedIn={isLoggedIn}><KelolaPPKSPage /></ProtectedRoute>} />
-          <Route path="/kontak" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ContactPage /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

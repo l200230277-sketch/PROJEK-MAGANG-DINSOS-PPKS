@@ -55,7 +55,7 @@ export default function LoginPage({ onLogin }) {
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0,0,0,0.54)',
+          background: 'rgba(0,0,0,0.34)',
           zIndex: 0,
         }}
       />
