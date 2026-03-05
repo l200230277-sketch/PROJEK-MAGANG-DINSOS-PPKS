@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, Route, Routes, useLocation, useNavigate, BrowserRouter } from 'react-router-dom'
 import './App.css'
 import Home from './pages/Home.jsx'
 import PPKSMapPage from './pages/PPKSMapPage.jsx'
@@ -100,7 +100,7 @@ function App() {
                   if (event.key === 'Enter') {
                     const value = event.currentTarget.value.trim()
                     if (value) {
-                      navigate(`/ppks-detail?desa=${encodeURIComponent(value)}`)
+                      navigate(`/ppks?search=${encodeURIComponent(value)}`)
                     }
                   }
                 }}
