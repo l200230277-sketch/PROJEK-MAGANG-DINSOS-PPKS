@@ -17,7 +17,6 @@ function App() {
     const handleScroll = () => {
       setScrollY(window.scrollY || window.pageYOffset || 0)
     }
-
     handleScroll()
 
     window.addEventListener('scroll', handleScroll, { passive: true })

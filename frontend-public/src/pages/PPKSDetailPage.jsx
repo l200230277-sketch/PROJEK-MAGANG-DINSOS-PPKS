@@ -1,50 +1,79 @@
-import { MapContainer, Polygon, Popup, TileLayer } from 'react-leaflet'
-import { useEffect, useMemo, useState } from 'react'
+import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet'
+import { useEffect, useState, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import L from 'leaflet'
 
+
 const BOYOLALI_CENTER = [-7.5299, 110.5955]
 
-// Contoh satu desa dengan popup
-const DESA_GUWO_POLYGON = [
-  [-7.47, 110.7],
-  [-7.45, 110.72],
-  [-7.46, 110.74],
-  [-7.48, 110.72],
-]
-
-function useQuery() {
-  const { search } = useLocation()
-  return useMemo(() => new URLSearchParams(search), [search])
-}
-
-function PPKSDetailPage() {
+function PPKSMapPage() {
   const [desaGeojson, setDesaGeojson] = useState(null)
-  const query = useQuery()
-  const searchDesa = query.get('desa')?.toLowerCase() || ''
+
+  const location = useLocation()
+  const queryParams = new URLSearchParams(location.search)
+  const searchTerm = (queryParams.get('search') || '').trim()
+
+useEffect(() => {
+  fetch('/boyolali-desa.geojson')
+    .then((res) => (res.ok ? res.json() : null))
+    .then((data) => {
+      if (data) {
+        console.log(data.features[0].properties)
+        setDesaGeojson(data)
+      }
+    })
+    .catch(() => {
+      setDesaGeojson(null)
+    })
+}, [])
+function FlyToSearch({ data, searchTerm }) {
+  const map = useMap()
 
   useEffect(() => {
-    fetch('/boyolali-desa.geojson')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) setDesaGeojson(data)
+    if (!data || !searchTerm) return
+
+    const filtered = data.features.filter((feature) => {
+      const nama =
+        feature.properties?.WADMKC ??
+        feature.properties?.NAMOBJ ??
+        feature.properties?.KECAMATAN ??
+        feature.properties?.Kecamatan ??
+        feature.properties?.NAME ??
+        ''
+
+      return nama.toLowerCase().includes(searchTerm.toLowerCase())
+    })
+
+    console.log("jumlah cocok (helper):", filtered.length)
+
+    if (filtered.length > 0) {
+      const layer = L.geoJSON({
+        type: 'FeatureCollection',
+        features: filtered,
       })
-      .catch(() => setDesaGeojson(null))
-  }, [])
+
+      map.flyToBounds(layer.getBounds(), {
+        duration: 1.5,
+        padding: [20, 20],
+      })
+    }
+  }, [data, searchTerm, map])
+
+  return null
+}
+
   return (
-    <section className="section hero-map-section" aria-labelledby="ppks-detail-heading">
-      <div className="hero-map-overlay" />
-      <div className="hero-map-content">
-        <header className="section-header section-header--light">
-          <p className="section-kicker">Detail Sebaran</p>
-          <h2 id="ppks-detail-heading" className="section-title">
+    <section className="section section-alt" aria-labelledby="ppks-heading">
+      <div className="section-inner">
+        <header className="section-header">
+          <h2 id="ppks-heading" className="section-title">
             PETA DAFTAR PPKS KAB. BOYOLALI
           </h2>
         </header>
 
-        <div className="hero-map-layout">
-          <div className="hero-map-panel">
-            <div className="hero-map-window">
+        <div className="map-layout">
+          <div className="map-card">
+            <div className="map-surface map-surface--with-leaflet">
               <MapContainer
                 center={BOYOLALI_CENTER}
                 zoom={11}
@@ -55,76 +84,46 @@ function PPKSDetailPage() {
                   attribution="&copy; Kontributor OpenStreetMap"
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {desaGeojson &&
-                  desaGeojson.features?.map((feature, index) => {
-                    const coords = feature.geometry.coordinates
-                    const namaDesa =
-                      (feature.properties?.desa || feature.properties?.DESA || '').toLowerCase()
+                {desaGeojson && (
+                  <FlyToSearch data={desaGeojson} searchTerm={searchTerm} />
+                )}
+                {desaGeojson && (
+                  <GeoJSON
+                    data={{
+                      ...desaGeojson,
+                      features: !searchTerm
+                       ? desaGeojson.features
+                       : desaGeojson.features.filter((feature) => {
+                          const nama =
+                            feature.properties?.WADMKC ??
+                            feature.properties?.NAMOBJ ??
+                            feature.properties?.KECAMATAN ??
+                            feature.properties?.Kecamatan ??
+                            feature.properties?.NAME ??
+                            ''
 
-                    const rings = coords[0]
-                    const latlngs = rings.map(([lng, lat]) => [lat, lng])
 
-                    const isMatch = searchDesa && namaDesa.includes(searchDesa)
-                    const options = {
-                      color: isMatch ? '#ffffff' : '#0c6624',
-                      weight: isMatch ? 2 : 0.8,
+                          return nama.toLowerCase().includes(searchTerm.toLowerCase())
+                         }),
+                    }}
+                    style={() => ({
+                      color: '#0c6624',
+                      weight: 0.8,
                       fillColor: '#25d63f',
-                      fillOpacity: 0.85,
-                    }
-
-                    /*const bounds = L.latLngBounds(latlngs)
-                    if (isMatch) {
-                      // center map on first matching desa
-                      setTimeout(() => {
-                        const map = L.DomUtil.getFeatureGroup
-                        // we cannot access map instance directly here, so only style highlight;
-                        // for lebih presisi nanti bisa pakai useMap di komponen terpisah.
-                      }, 0)
-                    }*/
-
-                    return (
-                      <Polygon key={index} positions={latlngs} pathOptions={options}>
-                        <Popup>
-                          <div className="ppks-popup">
-                            <p className="ppks-popup-title">
-                              {feature.properties?.desa || feature.properties?.DESA || 'Desa'}
-                            </p>
-                            <p className="ppks-popup-sub">
-                              {feature.properties?.kecamatan ||
-                                feature.properties?.KECAMATAN ||
-                                'Kecamatan'}
-                            </p>
-                          </div>
-                        </Popup>
-                      </Polygon>
-                    )
-                  })}
-                <Polygon
-                  positions={DESA_GUWO_POLYGON}
-                  pathOptions={{ color: '#ffffff', fillColor: '#19b341', fillOpacity: 0.9 }}
-                >
-                  <Popup>
-                    <div className="ppks-popup">
-                      <p className="ppks-popup-title">Des. Guwo</p>
-                      <p className="ppks-popup-sub">Kec. Wonosamodro</p>
-                      <a href="#" className="ppks-popup-link">
-                        9 Orang
-                      </a>
-                    </div>
-                  </Popup>
-                </Polygon>
+                      fillOpacity: 0.8,
+                    })}
+                  />
+                )}
               </MapContainer>
             </div>
           </div>
 
-          <aside className="hero-map-sidebar">
-            <h3 className="hero-map-sidebar-title">Data</h3>
-            <div className="ppks-detail-panel">
-              <p className="ppks-detail-location">
-                <strong>Des. Guwo</strong>
-                <br />
-                Kec. Wonosamodro
-              </p>
+          <aside className="ppks-table-card" aria-label="Tabel data PPKS">
+            <div className="ppks-table-header">
+              <h3>Desa</h3>
+              <p>Kecamatan</p>
+            </div>
+            <div className="ppks-table-wrapper">
               <table className="ppks-table">
                 <thead>
                   <tr>
@@ -133,10 +132,12 @@ function PPKSDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>Contoh</td>
-                    <td>9</td>
-                  </tr>
+                  {Array.from({ length: 26 }).map((_, index) => (
+                    <tr key={index}>
+                      <td>Jenis {index + 1}</td>
+                      <td>0</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -147,5 +148,5 @@ function PPKSDetailPage() {
   )
 }
 
-export default PPKSDetailPage
+export default PPKSMapPage
 

@@ -2,30 +2,10 @@ import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet'
 import { useEffect, useState, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import L from 'leaflet'
-
+import bgDinsos from '../assets/bg-dinsos.png'
 
 const BOYOLALI_CENTER = [-7.5299, 110.5955]
 
-function PPKSMapPage() {
-  const [desaGeojson, setDesaGeojson] = useState(null)
-
-  const location = useLocation()
-  const queryParams = new URLSearchParams(location.search)
-  const searchTerm = (queryParams.get('search') || '').trim()
-
-useEffect(() => {
-  fetch('/boyolali-desa.geojson')
-    .then((res) => (res.ok ? res.json() : null))
-    .then((data) => {
-      if (data) {
-        console.log(data.features[0].properties)
-        setDesaGeojson(data)
-      }
-    })
-    .catch(() => {
-      setDesaGeojson(null)
-    })
-}, [])
 function FlyToSearch({ data, searchTerm }) {
   const map = useMap()
 
@@ -34,24 +14,18 @@ function FlyToSearch({ data, searchTerm }) {
 
     const filtered = data.features.filter((feature) => {
       const nama =
-        feature.properties?.WADMKC ??
-        feature.properties?.NAMOBJ ??
-        feature.properties?.KECAMATAN ??
-        feature.properties?.Kecamatan ??
-        feature.properties?.NAME ??
+        feature.properties?.NAME_4 ||
+        feature.properties?.NAME_3 ||
+        feature.properties?.name ||
         ''
-
       return nama.toLowerCase().includes(searchTerm.toLowerCase())
     })
-
-    console.log("jumlah cocok (helper):", filtered.length)
 
     if (filtered.length > 0) {
       const layer = L.geoJSON({
         type: 'FeatureCollection',
         features: filtered,
       })
-
       map.flyToBounds(layer.getBounds(), {
         duration: 1.5,
         padding: [20, 20],
@@ -62,12 +36,67 @@ function FlyToSearch({ data, searchTerm }) {
   return null
 }
 
+function PPKSMapPage() {
+  const [desaGeojson, setDesaGeojson] = useState(null)
+  const location = useLocation()
+  const queryParams = new URLSearchParams(location.search)
+  const searchTerm = (queryParams.get('search') || '').trim()
+  const mapRef = useRef(null)
+
+  useEffect(() => {
+    const loadGeojson = async () => {
+      try {
+        let res = await fetch('/boyolali-desa.geojson')
+        if (!res.ok) {
+          res = await fetch('/data/boyolali-desa.geojson')
+        }
+        const data = await res.json()
+        setDesaGeojson(data)
+      } catch (err) {
+        console.error("Gagal memuat GeoJSON:", err)
+        setDesaGeojson(null)
+      }
+    }
+    loadGeojson()
+  }, [])
+
+  // Zoom otomatis ke seluruh desa setelah GeoJSON load
+  useEffect(() => {
+    if (!desaGeojson || !mapRef.current) return
+    const geoLayer = L.geoJSON(desaGeojson)
+    mapRef.current.fitBounds(geoLayer.getBounds())
+  }, [desaGeojson])
+  const kecamatanDariGeoJSON = desaGeojson
+  ? Array.from(new Set(desaGeojson.features.map(f => f.properties?.NAME_3)))
+  : []
+  const jumlahPPKSByKecamatan = {}
+  kecamatanDariGeoJSON.forEach(kec => {
+    jumlahPPKSByKecamatan[kec] = 0 // sementara kosong, nanti diisi Excel
+  })
   return (
-    <section className="section section-alt" aria-labelledby="ppks-heading">
-      <div className="section-inner">
+    <section
+      className="section section-alt"
+      aria-labelledby="ppks-heading"
+      style={{ position: "relative", overflow: "hidden" }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          top: 0, left: 0, width: "100%", height: "100%",
+          backgroundImage: `url(${bgDinsos})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "blur(3px)",
+          transform: "scale(1.1)",
+          zIndex: 0,
+          pointerEvents: "none"
+        }}
+      />
+
+      <div className="section-inner" style={{ position: "relative", zIndex: 1 }}>
         <header className="section-header">
           <h2 id="ppks-heading" className="section-title">
-            PETA DAFTAR PPKS KAB. BOYOLALI
+            PETA SEBARAN DAFTAR PPKS KAB. BOYOLALI
           </h2>
         </header>
 
@@ -79,40 +108,51 @@ function FlyToSearch({ data, searchTerm }) {
                 zoom={11}
                 scrollWheelZoom={false}
                 className="leaflet-map"
+                whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
               >
                 <TileLayer
-                  attribution="&copy; Kontributor OpenStreetMap"
+                  attribution="&copy; OpenStreetMap"
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {desaGeojson && (
-                  <FlyToSearch data={desaGeojson} searchTerm={searchTerm} />
-                )}
-                {desaGeojson && (
-                  <GeoJSON
-                    data={{
-                      ...desaGeojson,
-                      features: !searchTerm
-                       ? desaGeojson.features
-                       : desaGeojson.features.filter((feature) => {
-                          const nama =
-                            feature.properties?.WADMKC ??
-                            feature.properties?.NAMOBJ ??
-                            feature.properties?.KECAMATAN ??
-                            feature.properties?.Kecamatan ??
-                            feature.properties?.NAME ??
-                            ''
 
+                {desaGeojson && (
+                  <>
+                    <FlyToSearch data={desaGeojson} searchTerm={searchTerm} />
 
-                          return nama.toLowerCase().includes(searchTerm.toLowerCase())
-                         }),
-                    }}
-                    style={() => ({
-                      color: '#0c6624',
-                      weight: 0.8,
-                      fillColor: '#25d63f',
-                      fillOpacity: 0.8,
-                    })}
-                  />
+                    <GeoJSON
+                      data={{
+                        ...desaGeojson,
+                        features: !searchTerm
+                          ? desaGeojson.features
+                          : desaGeojson.features.filter((f) => {
+                              const nama =
+                                f.properties?.NAME_4 ??
+                                f.properties?.NAME_3 ??
+                                f.properties?.WADMKC ??
+                                f.properties?.NAMOBJ ??
+                                f.properties?.NAME ??
+                                ''
+                              return nama.toLowerCase().includes(searchTerm.toLowerCase())
+                            }),
+                      }}
+                      style={(feature) => ({
+                        color: '#0c6624',
+                        weight: 1.5,
+                        fillColor: '#25d63f',
+                        fillOpacity: 0.6,
+                      })}
+                      onEachFeature={(feature, layer) => {
+                        const namaDesa = feature.properties?.NAME_4 || 'Desa'
+                        const kecamatan = feature.properties?.NAME_3 || 'Kecamatan'
+                        const jumlah = jumlahPPKSByKecamatan[kecamatan] ?? 0 // ambil jumlah dari tabel
+                        layer.bindPopup(`
+                          <strong>Desa:</strong> ${namaDesa} <br/>
+                          <strong>Kecamatan:</strong> ${kecamatan} <br/>
+                          <strong>Jumlah PPKS:</strong> ${jumlah}
+                        `)
+                      }}
+                    />
+                  </>
                 )}
               </MapContainer>
             </div>
@@ -120,8 +160,8 @@ function FlyToSearch({ data, searchTerm }) {
 
           <aside className="ppks-table-card" aria-label="Tabel data PPKS">
             <div className="ppks-table-header">
-              <h3>Data</h3>
-              <p>Total 1000 orang</p>
+              <h3>Data Wilayah per Kecamatan</h3>
+              <p>Total Kecamatan {desaGeojson ? new Set(desaGeojson.features.map(f => f.properties?.NAME_3)).size : 0}</p>
             </div>
             <div className="ppks-table-wrapper">
               <table className="ppks-table">
@@ -132,19 +172,21 @@ function FlyToSearch({ data, searchTerm }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {Array.from({ length: 22 }).map((_, index) => (
-                    <tr key={index}>
-                      <td>Kecamatan {index + 1}</td>
-                      <td>0</td>
+                  {kecamatanDariGeoJSON.length > 0 ? (
+                    kecamatanDariGeoJSON.map((kec, idx) => (
+                      <tr key={idx}>
+                        <td>{kec}</td>
+                        <td>{jumlahPPKSByKecamatan[kec]}</td>
+                      </tr>
+                    )) 
+                  ) : (
+                    <tr>
+                      <td colSpan="2" style={{ textAlign: 'center' }}>Memuat data...</td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
-            <p className="ppks-table-down">
-              Tabel ini nantinya akan terisi otomatis dari file Excel yang diunggah admin
-              (import data PPKS per kecamatan).
-            </p>
           </aside>
         </div>
       </div>
@@ -153,4 +195,3 @@ function FlyToSearch({ data, searchTerm }) {
 }
 
 export default PPKSMapPage
-
