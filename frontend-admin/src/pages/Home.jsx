@@ -24,7 +24,7 @@ function Home({ heroTransform }) {
           </div>
         </div>
 
-        <div className="hero-divider"></div>
+        <div className="hero-divider" />
 
         <div className="hero-title-block">
           <h1 id="hero-heading" className="hero-main-title">
@@ -49,4 +49,3 @@ Home.propTypes = {
 }
 
 export default Home
-

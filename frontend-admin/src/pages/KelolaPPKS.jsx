@@ -62,7 +62,11 @@ export default function KelolaPPKSPage() {
   const [editValue, setEditValue] = useState('')
   const [sheetName, setSheetName] = useState('Sheet1')
   const [hasChanges, setHasChanges] = useState(false)
+  const [editorSearch, setEditorSearch] = useState('')
+  const [matchIndices, setMatchIndices] = useState([])
+  const [matchCursor, setMatchCursor] = useState(0)
   const cellInputRef = useRef(null)
+  const editorSearchRef = useRef(null)
 
   const handleFile = (file) => {
     if (!file) return
@@ -82,7 +86,12 @@ export default function KelolaPPKSPage() {
       const now = new Date()
       const tanggal = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`
       const ukuran = file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(0)} kb` : `${(file.size / (1024 * 1024)).toFixed(1)} mb`
-      setDocs((prev) => [{ id: Date.now(), nama: file.name, ukuran, terakhir: tanggal, uploader: 'Admin', email: 'admin@dinsos.go.id', avatar: 'AD', avatarColor: '#27ae60', fileObj: file, sheetData: parsed, sheetName: wsName }, ...prev])
+      setDocs((prev) => [{
+        id: Date.now(), nama: file.name, ukuran, terakhir: tanggal,
+        uploader: 'Admin', email: 'admin@dinsos.go.id',
+        avatar: 'AD', avatarColor: '#27ae60',
+        fileObj: file, sheetData: parsed, sheetName: wsName,
+      }, ...prev])
     }
     reader.readAsArrayBuffer(file)
   }
@@ -124,6 +133,9 @@ export default function KelolaPPKSPage() {
     setSelectedCell({ row: 0, col: 0 })
     setEditingCell(null)
     setHasChanges(false)
+    setEditorSearch('')
+    setMatchIndices([])
+    setMatchCursor(0)
   }
 
   const handleCellClick = (row, col) => {
@@ -160,7 +172,9 @@ export default function KelolaPPKSPage() {
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
     const blob = new Blob([wbout], { type: 'application/octet-stream' })
     setDocs((prev) => {
-      const updated = prev.map((d) => d.id === editingDoc.id ? { ...d, terakhir: tanggal, sheetData, fileObj: new File([blob], d.nama, { type: blob.type }) } : d)
+      const updated = prev.map((d) => d.id === editingDoc.id
+        ? { ...d, terakhir: tanggal, sheetData, fileObj: new File([blob], d.nama, { type: blob.type }) }
+        : d)
       const idx = updated.findIndex((d) => d.id === editingDoc.id)
       if (idx > 0) { const [moved] = updated.splice(idx, 1); updated.unshift(moved) }
       return updated
@@ -169,12 +183,62 @@ export default function KelolaPPKSPage() {
     setEditorOpen(false)
   }
 
+  // Search di dalam editor
+  const handleEditorSearch = (val) => {
+    setEditorSearch(val)
+    if (!val.trim()) {
+      setMatchIndices([])
+      setMatchCursor(0)
+      return
+    }
+    const matches = []
+    sheetData.forEach((row, ri) => {
+      row.forEach((cell, ci) => {
+        if (String(cell ?? '').toLowerCase().includes(val.toLowerCase())) {
+          matches.push({ row: ri, col: ci })
+        }
+      })
+    })
+    setMatchIndices(matches)
+    setMatchCursor(0)
+    if (matches.length > 0) {
+      setSelectedCell(matches[0])
+      scrollCellIntoView(matches[0])
+    }
+  }
+
+  const scrollCellIntoView = ({ row, col }) => {
+    setTimeout(() => {
+      const el = document.getElementById(`cell-${row}-${col}`)
+      if (el) el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' })
+    }, 50)
+  }
+
+  const goToMatch = (dir) => {
+    if (matchIndices.length === 0) return
+    const next = (matchCursor + dir + matchIndices.length) % matchIndices.length
+    setMatchCursor(next)
+    setSelectedCell(matchIndices[next])
+    scrollCellIntoView(matchIndices[next])
+  }
+
+  const isCellMatch = (row, col) => {
+    if (!editorSearch.trim()) return false
+    return String(sheetData[row]?.[col] ?? '').toLowerCase().includes(editorSearch.toLowerCase())
+  }
+
+  const isCellCurrentMatch = (row, col) => {
+    if (matchIndices.length === 0) return false
+    const cur = matchIndices[matchCursor]
+    return cur?.row === row && cur?.col === col
+  }
+
   const numCols = sheetData[0]?.length ?? 8
   const filtered = docs.filter((d) => d.nama.toLowerCase().includes(search.toLowerCase()))
 
   return (
     <div className="login-page" style={{ minHeight: '100vh', backgroundImage: `url(${heroBackground})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto', paddingTop: '80px', paddingBottom: '48px' }}>
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.08)', zIndex: 0, pointerEvents: 'none' }} />
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.28)', zIndex: 0, pointerEvents: 'none' }} />
 
       <div style={{ textAlign: 'center', paddingBottom: '28px', position: 'relative', zIndex: 1 }}>
         <h1 style={{ color: '#fff', fontSize: '2rem', fontWeight: 700, margin: 0, textShadow: '0 2px 12px rgba(0,0,0,0.99)' }}>Kelola PPKS</h1>
@@ -191,14 +255,13 @@ export default function KelolaPPKSPage() {
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" />
               </svg>
             </div>
-            <p style={{ margin: '0 0 4px', color: '#fff', fontSize: '0.97rem' }}><span style={{ color: '#173875c3', fontWeight: 600 }}>Klik disini</span>{' '}untuk unggah dokumen data PPKS</p>
+            <p style={{ margin: '0 0 4px', color: '#fff', fontSize: '0.97rem' }}><span style={{ color: '#000000c3', fontWeight: 600 }}>Klik disini</span>{' '}untuk unggah dokumen data PPKS</p>
             <p style={{ margin: 0, color: 'rgba(255,255,255,0.55)', fontSize: '0.82rem' }}>format Excel .xls/.xlsx</p>
             <input ref={fileInputRef} type="file" accept=".xls,.xlsx" style={{ display: 'none' }} onChange={(e) => handleFile(e.target.files[0])} />
           </div>
 
           {/* Table */}
           <div style={{ borderRadius: '16px', background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)', overflow: 'hidden' }}>
-            {/* Toolbar */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ color: '#fff', fontWeight: 700, fontSize: '1rem' }}>Data PPKS</span>
@@ -210,14 +273,11 @@ export default function KelolaPPKSPage() {
               </div>
             </div>
 
-            {/* Single container: scroll horizontal + vertical, header sticky */}
             <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '210px' }}>
               <table style={{ minWidth: '600px', width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem', tableLayout: 'fixed' }}>
                 <colgroup>
-                  <col style={{ width: '220px' }} />
-                  <col style={{ width: '100px' }} />
-                  <col style={{ width: '150px' }} />
-                  <col style={{ width: '230px' }} />
+                  <col style={{ width: '220px' }} /><col style={{ width: '100px' }} />
+                  <col style={{ width: '150px' }} /><col style={{ width: '230px' }} />
                   <col style={{ width: '160px' }} />
                 </colgroup>
                 <thead>
@@ -235,13 +295,9 @@ export default function KelolaPPKSPage() {
                       style={{ borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none', transition: 'background 150ms' }}
                       onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-                      {/* Nama Dokumen — rata kiri */}
                       <td style={{ padding: '13px 20px', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center' }}>{doc.nama}</td>
-                      {/* Ukuran — center */}
                       <td style={{ padding: '13px 20px', color: 'rgba(255,255,255,0.75)', whiteSpace: 'nowrap', textAlign: 'center' }}>{doc.ukuran}</td>
-                      {/* Terakhir Perbarui — center */}
                       <td style={{ padding: '13px 20px', color: 'rgba(255,255,255,0.75)', whiteSpace: 'nowrap', textAlign: 'center' }}>{doc.terakhir}</td>
-                      {/* Diunggah oleh — rata kiri */}
                       <td style={{ padding: '13px 20px', whiteSpace: 'nowrap', overflow: 'hidden', textAlign: 'left' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                           <div style={{ width: 34, height: 34, borderRadius: '50%', background: doc.avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: 700, color: '#fff', flexShrink: 0 }}>{doc.avatar}</div>
@@ -251,11 +307,10 @@ export default function KelolaPPKSPage() {
                           </div>
                         </div>
                       </td>
-                      {/* Aksi — center */}
                       <td style={{ padding: '13px 20px', whiteSpace: 'nowrap', textAlign: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'center' }}>
-                          <button onClick={() => handleDelete(doc.id)} style={{ background: 'none', border: 'none', color: '#b83e30', cursor: 'pointer', fontSize: '0.85rem', padding: 0, fontWeight: 500 }}>hapus</button>
-                          <button onClick={() => handleEdit(doc)} style={{ background: 'none', border: 'none', color: '#2c65cd', cursor: 'pointer', fontSize: '0.85rem', padding: 0, fontWeight: 500 }}>edit</button>
+                          <button onClick={() => handleDelete(doc.id)} style={{ background: 'none', border: 'none', color: '#83342b', cursor: 'pointer', fontSize: '0.85rem', padding: 0, fontWeight: 500 }}>hapus</button>
+                          <button onClick={() => handleEdit(doc)} style={{ background: 'none', border: 'none', color: '#173b7d', cursor: 'pointer', fontSize: '0.85rem', padding: 0, fontWeight: 500 }}>edit</button>
                           <button onClick={() => handleDownload(doc)} aria-label="Download" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.65)', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
@@ -294,12 +349,14 @@ export default function KelolaPPKSPage() {
               </div>
             </div>
 
-            {/* Formula bar */}
+            {/* Formula bar + Search bar */}
             <div style={{ background: '#252b3b', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+              {/* Cell ref */}
               <div style={{ background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4, padding: '3px 10px', color: '#fff', fontSize: '0.8rem', minWidth: 60, textAlign: 'center' }}>
                 {colLabel(selectedCell.col)}{selectedCell.row + 1}
               </div>
               <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)' }} />
+              {/* Formula input */}
               <input
                 value={editingCell ? editValue : String(sheetData[selectedCell.row]?.[selectedCell.col] ?? '')}
                 onChange={(e) => { if (!editingCell) setEditingCell(selectedCell); setEditValue(e.target.value) }}
@@ -307,6 +364,44 @@ export default function KelolaPPKSPage() {
                 style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: '0.85rem' }}
                 placeholder="Nilai sel..."
               />
+              {/* Divider */}
+              <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)' }} />
+              {/* Search box */}
+              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.35)', borderRadius: 7, padding: '3px 10px', gap: 6, minWidth: 200 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  ref={editorSearchRef}
+                  type="text"
+                  placeholder="Cari di file..."
+                  value={editorSearch}
+                  onChange={(e) => handleEditorSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') { e.shiftKey ? goToMatch(-1) : goToMatch(1) }
+                    if (e.key === 'Escape') { setEditorSearch(''); setMatchIndices([]); setMatchCursor(0) }
+                  }}
+                  style={{ border: 'none', outline: 'none', background: 'transparent', color: '#fff', fontSize: '0.8rem', width: '100%' }}
+                />
+                {/* Hasil pencarian */}
+                {editorSearch && (
+                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
+                    {matchIndices.length > 0 ? `${matchCursor + 1}/${matchIndices.length}` : '0'}
+                  </span>
+                )}
+                {/* Navigasi prev/next */}
+                {matchIndices.length > 0 && (
+                  <>
+                    <button onClick={() => goToMatch(-1)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '0 2px', fontSize: '0.75rem', lineHeight: 1 }}>▲</button>
+                    <button onClick={() => goToMatch(1)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '0 2px', fontSize: '0.75rem', lineHeight: 1 }}>▼</button>
+                  </>
+                )}
+                {/* Clear */}
+                {editorSearch && (
+                  <button onClick={() => { setEditorSearch(''); setMatchIndices([]); setMatchCursor(0) }}
+                    style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 0, fontSize: '0.85rem', lineHeight: 1 }}>✕</button>
+                )}
+              </div>
             </div>
 
             {/* Spreadsheet */}
@@ -334,9 +429,19 @@ export default function KelolaPPKSPage() {
                         const isSelected = selectedCell.row === ri && selectedCell.col === ci
                         const isEditing = editingCell?.row === ri && editingCell?.col === ci
                         const isHeader = ri === 0
+                        const isMatch = isCellMatch(ri, ci)
+                        const isCurrentMatch = isCellCurrentMatch(ri, ci)
                         return (
-                          <td key={ci} onClick={() => handleCellClick(ri, ci)} onDoubleClick={() => handleCellDoubleClick(ri, ci)}
-                            style={{ border: isSelected ? '2px solid #217346' : '1px solid rgba(255,255,255,0.07)', background: isSelected ? 'rgba(33,115,70,0.15)' : isHeader ? 'rgba(255,255,255,0.04)' : 'transparent', color: '#fff', padding: 0, verticalAlign: 'middle', cursor: 'cell', position: 'relative' }}>
+                          <td
+                            key={ci}
+                            id={`cell-${ri}-${ci}`}
+                            onClick={() => handleCellClick(ri, ci)}
+                            onDoubleClick={() => handleCellDoubleClick(ri, ci)}
+                            style={{
+                              border: isSelected ? '2px solid #217346' : isCurrentMatch ? '2px solid #facc15' : '1px solid rgba(255,255,255,0.07)',
+                              background: isCurrentMatch ? 'rgba(250,204,21,0.25)' : isMatch ? 'rgba(250,204,21,0.08)' : isSelected ? 'rgba(33,115,70,0.15)' : isHeader ? 'rgba(255,255,255,0.04)' : 'transparent',
+                              color: '#fff', padding: 0, verticalAlign: 'middle', cursor: 'cell', position: 'relative',
+                            }}>
                             {isEditing ? (
                               <input ref={cellInputRef} value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={handleCellKeyDown} onBlur={commitCell}
                                 style={{ width: '100%', height: '100%', background: '#fff', color: '#000', border: 'none', outline: 'none', padding: '3px 8px', fontSize: '0.8rem', boxSizing: 'border-box', minHeight: 26 }} />
@@ -359,11 +464,6 @@ export default function KelolaPPKSPage() {
                   </tr>
                 </tbody>
               </table>
-            </div>
-
-            {/* Sheet tab */}
-            <div style={{ background: '#1a1f2e', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '4px 12px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-              <div style={{ background: '#217346', color: '#fff', borderRadius: '4px 4px 0 0', padding: '4px 16px', fontSize: '0.78rem', fontWeight: 600 }}>{sheetName}</div>
             </div>
           </div>
         </div>
