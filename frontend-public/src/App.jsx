@@ -3,7 +3,6 @@ import { NavLink, Route, Routes, useLocation, useNavigate, BrowserRouter } from 
 import './App.css'
 import Home from './pages/Home.jsx'
 import PPKSMapPage from './pages/PPKSMapPage.jsx'
-import PPKSDetailPage from './pages/PPKSDetailPage.jsx'
 import ContactPage from './pages/ContactPage.jsx'
 import logoBoyolali from './assets/logo-boyolali.png'
 import heroBackground from './assets/bg-dinsos.png'
@@ -78,12 +77,6 @@ function App() {
               PPKS
             </NavLink>
             <NavLink
-              to="/ppks-detail"
-              className={({ isActive }) => `nav-link ${isActive ? 'is-active' : ''}`}
-            >
-              PPKS Detail
-            </NavLink>
-            <NavLink
               to="/kontak"
               className={({ isActive }) => `nav-link ${isActive ? 'is-active' : ''}`}
             >
@@ -116,7 +109,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Home heroTransform={heroTransform} />} />
           <Route path="/ppks" element={<PPKSMapPage />} />
-          <Route path="/ppks-detail" element={<PPKSDetailPage />} />
           <Route path="/kontak" element={<ContactPage />} />
         </Routes>
       </main>
