@@ -1,4 +1,4 @@
-import bgDinsos from '../assets/bg-dinsos.png'
+import bgDinsos from '../assets/bg-dinsos.jpeg'
 
 function ContactPage() {
   return (

@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet'
 import { useEffect, useState, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import L from 'leaflet'
-import bgDinsos from '../assets/bg-dinsos.png'
+import bgDinsos from '../assets/bg-dinsos.jpeg'
 
 const BOYOLALI_CENTER = [-7.5299, 110.5955]
 
@@ -14,7 +14,12 @@ function FlyToSearch({ data, searchTerm }) {
 
     const filtered = data.features.filter((feature) => {
       const desa = feature.properties?.NAME_4 || ''
-      return desa.toLowerCase().includes(searchTerm.toLowerCase())
+      const kec = feature.properties?.NAME_3 || ''
+
+      return (
+        desa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        kec.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     })
 
     if (filtered.length > 0) {
@@ -32,7 +37,10 @@ function FlyToSearch({ data, searchTerm }) {
         map.eachLayer((l) => {
           if (l.feature) {
             const desa = l.feature.properties?.NAME_4 || ''
-            if (desa.toLowerCase().includes(searchTerm.toLowerCase())) {
+
+            if (
+              desa.toLowerCase() === searchTerm.toLowerCase() // popup hanya kalau benar-benar desa
+            ) {
               if (l.openPopup) l.openPopup()
             }
           }
@@ -202,32 +210,35 @@ function PPKSMapPage() {
                     <FlyToSearch data={desaGeojson} searchTerm={searchTerm} />
 
                     <GeoJSON
-                      data={{
-                        ...desaGeojson,
-                        features: !searchTerm
-                          ? desaGeojson.features
-                          : desaGeojson.features.filter((f) => {
-                              const nama =
-                                f.properties?.NAME_4 ??
-                                f.properties?.NAME_3 ??
-                                f.properties?.WADMKC ??
-                                f.properties?.NAMOBJ ??
-                                f.properties?.NAME ??
-                                ''
-                              return nama.toLowerCase().includes(searchTerm.toLowerCase())
-                            }),
-                      }}
+                    data={{
+                      ...desaGeojson,
+                      features: !searchTerm
+                        ? desaGeojson.features
+                        : desaGeojson.features.filter((f) => {
+                            const desa = f.properties?.NAME_4 || ''
+                            const kec = f.properties?.NAME_3 || ''
+
+                            return (
+                              desa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              kec.toLowerCase().includes(searchTerm.toLowerCase())
+                            )
+                          }),
+                    }}
                       style={(feature) => {
                         const desa = feature.properties?.NAME_4?.toLowerCase() || ''
+                        const kec = feature.properties?.NAME_3?.toLowerCase() || ''
 
                         const isClicked =
                           selectedFeature &&
                           selectedFeature.properties?.NAME_4 === feature.properties?.NAME_4
 
                         const isSearchMatch =
-                          !selectedFeature &&   // search hanya aktif jika belum klik
+                          !selectedFeature &&
                           searchTerm &&
-                          desa.includes(searchTerm.toLowerCase())
+                          (
+                            desa.includes(searchTerm.toLowerCase()) ||
+                            kec.includes(searchTerm.toLowerCase())
+                          )
 
                         return {
                           color: '#0c6624',
@@ -244,14 +255,23 @@ function PPKSMapPage() {
                           <strong>Desa:</strong> ${namaDesa} <br/>
                           <strong>Kecamatan:</strong> ${kecamatan} <br/>
                           <strong>Jumlah PPKS:</strong> 
-                          <a href="http://localhost:5174/login"
-                            style="color:#0c6624;font-weight:bold;text-decoration:underline;">
+                          <span 
+                            class="jumlah-link" 
+                            style="color:#0c6624;font-weight:bold;cursor:pointer;text-decoration:underline;">
                             ${jumlah}
-                          </a>
+                          </span>
                         `)
-                        layer.on({
-                          click: () => {
-                            setSelectedFeature(feature)
+                        layer.on("click", () => {
+                          setSelectedFeature(feature)
+                        })
+                        layer.on("popupopen", (e) => {
+                          const popupNode = e.popup.getElement()
+                          const btn = popupNode.querySelector(".jumlah-link")
+
+                          if (btn) {
+                            btn.onclick = () => {
+                              navigate(`/login?desa=${encodeURIComponent(namaDesa)}`)
+                            }
                           }
                         })
                       }}

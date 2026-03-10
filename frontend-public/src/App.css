@@ -18,6 +18,15 @@
     padding 220ms ease,
     backdrop-filter 220ms ease;
 }
+.site-header--hidden{
+  display: none;
+}
+
+.section-inner{
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+}
 
 .section-inner{
   max-width: 1200px;
@@ -302,11 +311,16 @@ main {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at top left, rgba(79, 141, 253, 0.75), transparent 58%),
-    radial-gradient(circle at bottom right, rgba(66, 232, 196, 0.75), transparent 55%),
     linear-gradient(to bottom, rgba(0, 6, 14, 0.65), rgba(0, 6, 14, 0.96));
   mix-blend-mode: soft-light;
   opacity: 0.92;
+}
+.kelola-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.08);
+  z-index: 0;
+  pointer-events: none;
 }
 
 .hero-content {
@@ -770,7 +784,7 @@ main {
 }
 
 .ppks-detail-overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -793,8 +807,8 @@ main {
   padding: 20px;
   border-radius: 18px;
 
-  width: 1010px;
-  height: 540px;
+  width: 500px;
+  height: 536px;
   overflow-y: auto;
 
   box-shadow: 0 15px 40px rgba(0,0,0,0.25);

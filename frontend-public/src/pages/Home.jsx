@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import logoDinsos from '../assets/logo-dinsos.png'
 import logoBoyolali from '../assets/logo-boyolali.png'
+import heroBackground from '../assets/bg-dinsos.jpeg'
 
 function Home({ heroTransform }) {
   const style =
@@ -12,8 +13,12 @@ function Home({ heroTransform }) {
       : undefined
 
   return (
-    <section className="section hero-section" aria-labelledby="hero-heading">
-      <div className="hero-overlay" />
+    <section
+      className="section hero-section"
+      aria-labelledby="hero-heading"
+      style={{ backgroundImage: `url(${heroBackground})` }}
+    >
+      <div className="kelola-overlay" />
       <div className="hero-content hero-content--home">
         <div className="hero-logos-block" style={style}>
           <div className="hero-logo-left">
@@ -24,9 +29,9 @@ function Home({ heroTransform }) {
           </div>
         </div>
 
-        <div className="hero-divider"></div>
+        <div className="hero-divider" style={style} />
 
-        <div className="hero-title-block">
+        <div className="hero-title-block" style={style}>
           <h1 id="hero-heading" className="hero-main-title">
             Boyolali Sehat, Tangguh,
             <br />
@@ -49,4 +54,3 @@ Home.propTypes = {
 }
 
 export default Home
-
