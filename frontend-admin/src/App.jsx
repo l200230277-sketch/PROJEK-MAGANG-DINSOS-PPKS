@@ -6,7 +6,7 @@ import PPKSMapPage from './pages/PPKSMapPage.jsx'
 import KelolaPPKSPage from './pages/KelolaPPKS.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import logoBoyolali from './assets/logo-boyolali.png'
-import heroBackground from './assets/bg-dinsos.png'
+import heroBackground from './assets/bg-dinsos.jpeg'
 
 function ProtectedRoute({ isLoggedIn, children }) {
   if (!isLoggedIn) return <Navigate to="/login" replace />
