@@ -3,13 +3,16 @@ import { NavLink, Route, Routes, useLocation, useNavigate, BrowserRouter } from 
 import './App.css'
 import Home from './pages/Home.jsx'
 import PPKSMapPage from './pages/PPKSMapPage.jsx'
+import Loginpage from './pages/Loginpage.jsx'
 import ContactPage from './pages/ContactPage.jsx'
+import DataWarga from './pages/DataWarga.jsx'
 import logoBoyolali from './assets/logo-boyolali.png'
-import heroBackground from './assets/bg-dinsos.png'
+import heroBackground from './assets/bg-dinsos.jpeg'
 
 function App() {
   const [scrollY, setScrollY] = useState(0)
   const location = useLocation()
+  const hideHeader = location.pathname === "/DataWarga"
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -39,7 +42,7 @@ function App() {
 
   return (
     <div className="page" style={{ '--hero-bg-image': `url(${heroBackground})` }}>
-      <header className={`site-header ${scrollY > 8 ? 'site-header--scrolled' : ''}`}>
+      <header className={`site-header ${hideHeader ? 'site-header--hidden' : ''}`}>
         <div className="site-header-inner">
           <button
             className="brand-mini"
@@ -110,6 +113,8 @@ function App() {
           <Route path="/" element={<Home heroTransform={heroTransform} />} />
           <Route path="/ppks" element={<PPKSMapPage />} />
           <Route path="/kontak" element={<ContactPage />} />
+          <Route path="/login" element={<Loginpage onLogin={() => {}} />} />
+          <Route path="/DataWarga" element={<DataWarga />} />
         </Routes>
       </main>
 
