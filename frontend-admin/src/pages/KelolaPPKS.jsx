@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import * as XLSX from 'xlsx'
-import heroBackground from '../assets/bg-dinsos.png'
+import heroBackground from '../assets/bg-dinsos.jpeg'
 
 const DUMMY_DOCS = [
   {
@@ -183,28 +183,18 @@ export default function KelolaPPKSPage() {
     setEditorOpen(false)
   }
 
-  // Search di dalam editor
   const handleEditorSearch = (val) => {
     setEditorSearch(val)
-    if (!val.trim()) {
-      setMatchIndices([])
-      setMatchCursor(0)
-      return
-    }
+    if (!val.trim()) { setMatchIndices([]); setMatchCursor(0); return }
     const matches = []
     sheetData.forEach((row, ri) => {
       row.forEach((cell, ci) => {
-        if (String(cell ?? '').toLowerCase().includes(val.toLowerCase())) {
-          matches.push({ row: ri, col: ci })
-        }
+        if (String(cell ?? '').toLowerCase().includes(val.toLowerCase())) matches.push({ row: ri, col: ci })
       })
     })
     setMatchIndices(matches)
     setMatchCursor(0)
-    if (matches.length > 0) {
-      setSelectedCell(matches[0])
-      scrollCellIntoView(matches[0])
-    }
+    if (matches.length > 0) { setSelectedCell(matches[0]); scrollCellIntoView(matches[0]) }
   }
 
   const scrollCellIntoView = ({ row, col }) => {
@@ -222,10 +212,8 @@ export default function KelolaPPKSPage() {
     scrollCellIntoView(matchIndices[next])
   }
 
-  const isCellMatch = (row, col) => {
-    if (!editorSearch.trim()) return false
-    return String(sheetData[row]?.[col] ?? '').toLowerCase().includes(editorSearch.toLowerCase())
-  }
+  const isCellMatch = (row, col) =>
+    editorSearch.trim() && String(sheetData[row]?.[col] ?? '').toLowerCase().includes(editorSearch.toLowerCase())
 
   const isCellCurrentMatch = (row, col) => {
     if (matchIndices.length === 0) return false
@@ -237,83 +225,112 @@ export default function KelolaPPKSPage() {
   const filtered = docs.filter((d) => d.nama.toLowerCase().includes(search.toLowerCase()))
 
   return (
-    <div className="login-page" style={{ minHeight: '100vh', backgroundImage: `url(${heroBackground})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto', paddingTop: '80px', paddingBottom: '48px' }}>
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.28)', zIndex: 0, pointerEvents: 'none' }} />
+    <div
+      className="kelola-page"
+      style={{ backgroundImage: `url(${heroBackground})` }}
+    >
+      <div className="kelola-overlay" />
 
-      <div style={{ textAlign: 'center', paddingBottom: '28px', position: 'relative', zIndex: 1 }}>
-        <h1 style={{ color: '#fff', fontSize: '2rem', fontWeight: 700, margin: 0, textShadow: '0 2px 12px rgba(0,0,0,0.99)' }}>Kelola PPKS</h1>
+      <div className="kelola-heading">
+        <h1>Kelola PPKS</h1>
       </div>
 
-      <div style={{ width: '100%', maxWidth: 1050, margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
-        <div style={{ borderRadius: '24px', background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.30)', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="kelola-container">
+        <div className="kelola-glass-card">
 
           {/* Upload area */}
-          <div onClick={() => fileInputRef.current?.click()} onDragOver={(e) => { e.preventDefault(); setDragOver(true) }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop}
-            style={{ borderRadius: '16px', border: `2px dashed ${dragOver ? '#4f8dfd' : 'rgba(255,255,255,0.40)'}`, background: dragOver ? 'rgba(79,141,253,0.10)' : 'rgba(255,255,255,0.10)', padding: '16px 24px', textAlign: 'center', cursor: 'pointer', transition: 'border-color 200ms, background 200ms' }}>
-            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(41, 82, 158, 0.46)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+          <div
+            className={`kelola-upload-area${dragOver ? ' drag-over' : ''}`}
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+          >
+            <div className="kelola-upload-icon">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#113371" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" />
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="12" y1="18" x2="12" y2="12" />
+                <line x1="9" y1="15" x2="15" y2="15" />
               </svg>
             </div>
-            <p style={{ margin: '0 0 4px', color: '#fff', fontSize: '0.97rem' }}><span style={{ color: '#000000c3', fontWeight: 600 }}>Klik disini</span>{' '}untuk unggah dokumen data PPKS</p>
-            <p style={{ margin: 0, color: 'rgba(255,255,255,0.55)', fontSize: '0.82rem' }}>format Excel .xls/.xlsx</p>
-            <input ref={fileInputRef} type="file" accept=".xls,.xlsx" style={{ display: 'none' }} onChange={(e) => handleFile(e.target.files[0])} />
+            <p className="kelola-upload-label">
+              <strong>Klik disini</strong> untuk unggah dokumen data PPKS
+            </p>
+            <p className="kelola-upload-hint">format Excel .xls/.xlsx</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xls,.xlsx"
+              style={{ display: 'none' }}
+              onChange={(e) => handleFile(e.target.files[0])}
+            />
           </div>
 
           {/* Table */}
-          <div style={{ borderRadius: '16px', background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ color: '#fff', fontWeight: 700, fontSize: '1rem' }}>Data PPKS</span>
-                <span style={{ background: '#3b6fd4', color: '#fff', borderRadius: '999px', padding: '3px 12px', fontSize: '0.75rem', fontWeight: 600 }}>{docs.length} Dokumen</span>
+          <div className="kelola-table-card">
+            <div className="kelola-table-header">
+              <div className="kelola-table-title">
+                <span>Data PPKS</span>
+                <span className="kelola-table-badge">{docs.length} Dokumen</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0, 0, 0, 0.42)', borderRadius: '10px', padding: '7px 14px', gap: 8, minWidth: 180 }}>
-                <input type="text" placeholder="Cari..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ border: 'none', outline: 'none', background: 'transparent', color: '#ffffff', fontSize: '0.85rem', width: '100%' }} />
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+              <div className="kelola-search-box">
+                <input
+                  type="text"
+                  placeholder="Cari..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
               </div>
             </div>
 
-            <div style={{ overflowX: 'auto', overflowY: 'auto', maxHeight: '210px' }}>
-              <table style={{ minWidth: '600px', width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem', tableLayout: 'fixed' }}>
+            <div className="kelola-table-scroll">
+              <table className="kelola-table">
                 <colgroup>
-                  <col style={{ width: '220px' }} /><col style={{ width: '100px' }} />
-                  <col style={{ width: '150px' }} /><col style={{ width: '230px' }} />
+                  <col style={{ width: '220px' }} />
+                  <col style={{ width: '100px' }} />
+                  <col style={{ width: '150px' }} />
+                  <col style={{ width: '230px' }} />
                   <col style={{ width: '160px' }} />
                 </colgroup>
                 <thead>
-                  <tr style={{ borderTop: '1px solid rgba(255,255,255,0.12)', borderBottom: '1px solid rgba(255,255,255,0.12)', background: 'rgba(20,24,40,0.15)', position: 'sticky', top: 0, zIndex: 2 }}>
+                  <tr>
                     {['Nama Dokumen', 'Ukuran', 'Terakhir Perbarui', 'Diunggah oleh', 'Aksi'].map((h) => (
-                      <th key={h} style={{ padding: '11px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.length === 0 ? (
-                    <tr><td colSpan={5} style={{ padding: '28px', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>Tidak ada dokumen ditemukan.</td></tr>
+                    <tr>
+                      <td colSpan={5} className="kelola-table-empty">Tidak ada dokumen ditemukan.</td>
+                    </tr>
                   ) : filtered.map((doc, i) => (
-                    <tr key={doc.id}
-                      style={{ borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none', transition: 'background 150ms' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-                      <td style={{ padding: '13px 20px', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center' }}>{doc.nama}</td>
-                      <td style={{ padding: '13px 20px', color: 'rgba(255,255,255,0.75)', whiteSpace: 'nowrap', textAlign: 'center' }}>{doc.ukuran}</td>
-                      <td style={{ padding: '13px 20px', color: 'rgba(255,255,255,0.75)', whiteSpace: 'nowrap', textAlign: 'center' }}>{doc.terakhir}</td>
-                      <td style={{ padding: '13px 20px', whiteSpace: 'nowrap', overflow: 'hidden', textAlign: 'left' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                          <div style={{ width: 34, height: 34, borderRadius: '50%', background: doc.avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: 700, color: '#fff', flexShrink: 0 }}>{doc.avatar}</div>
-                          <div style={{ overflow: 'hidden' }}>
-                            <div style={{ color: '#fff', fontSize: '0.85rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.uploader}</div>
-                            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.email}</div>
+                    <tr key={doc.id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none' }}>
+                      <td className="col-name">{doc.nama}</td>
+                      <td>{doc.ukuran}</td>
+                      <td>{doc.terakhir}</td>
+                      <td className="col-uploader">
+                        <div className="kelola-uploader-cell">
+                          <div className="kelola-avatar" style={{ background: doc.avatarColor }}>{doc.avatar}</div>
+                          <div>
+                            <div className="kelola-uploader-name">{doc.uploader}</div>
+                            <div className="kelola-uploader-email">{doc.email}</div>
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: '13px 20px', whiteSpace: 'nowrap', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 14, justifyContent: 'center' }}>
-                          <button onClick={() => handleDelete(doc.id)} style={{ background: 'none', border: 'none', color: '#83342b', cursor: 'pointer', fontSize: '0.85rem', padding: 0, fontWeight: 500 }}>hapus</button>
-                          <button onClick={() => handleEdit(doc)} style={{ background: 'none', border: 'none', color: '#173b7d', cursor: 'pointer', fontSize: '0.85rem', padding: 0, fontWeight: 500 }}>edit</button>
-                          <button onClick={() => handleDownload(doc)} aria-label="Download" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.65)', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}>
+                      <td>
+                        <div className="kelola-action-cell">
+                          <button className="kelola-btn-delete" onClick={() => handleDelete(doc.id)}>hapus</button>
+                          <button className="kelola-btn-edit" onClick={() => handleEdit(doc)}>edit</button>
+                          <button className="kelola-btn-download" onClick={() => handleDownload(doc)} aria-label="Download">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="7 10 12 15 17 10" />
+                              <line x1="12" y1="15" x2="12" y2="3" />
                             </svg>
                           </button>
                         </div>
@@ -324,50 +341,57 @@ export default function KelolaPPKSPage() {
               </table>
             </div>
           </div>
+
         </div>
       </div>
 
       {/* EXCEL EDITOR MODAL */}
       {editorOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
-          onClick={(e) => { if (e.target === e.currentTarget) { if (hasChanges && !confirm('Ada perubahan yang belum disimpan. Tutup tanpa menyimpan?')) return; setEditorOpen(false) } }}>
-          <div style={{ width: '100%', maxWidth: '1100px', height: '85vh', background: '#1e2433', borderRadius: '16px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div
+          className="editor-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              if (hasChanges && !confirm('Ada perubahan yang belum disimpan. Tutup tanpa menyimpan?')) return
+              setEditorOpen(false)
+            }
+          }}
+        >
+          <div className="editor-modal">
 
             {/* Title bar */}
-            <div style={{ background: '#217346', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 28, height: 28, background: '#fff', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ color: '#217346', fontWeight: 900, fontSize: '0.85rem' }}>X</span>
-                </div>
-                <span style={{ color: '#fff', fontWeight: 600, fontSize: '0.9rem' }}>{editingDoc?.nama}</span>
-                {hasChanges && <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: '0.72rem', borderRadius: 4, padding: '2px 8px' }}>• Belum disimpan</span>}
+            <div className="editor-titlebar">
+              <div className="editor-titlebar-left">
+                <div className="editor-excel-icon"><span>X</span></div>
+                <span className="editor-filename">{editingDoc?.nama}</span>
+                {hasChanges && <span className="editor-unsaved-badge">• Belum disimpan</span>}
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={handleSave} style={{ background: '#fff', border: 'none', color: '#217346', borderRadius: 6, padding: '6px 18px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>💾 Simpan</button>
-                <button onClick={() => { if (hasChanges && !confirm('Ada perubahan yang belum disimpan. Tutup tanpa menyimpan?')) return; setEditorOpen(false) }}
-                  style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: '1rem' }}>✕</button>
+              <div className="editor-titlebar-right">
+                <button className="editor-btn-save" onClick={handleSave}>💾 Simpan</button>
+                <button
+                  className="editor-btn-close"
+                  onClick={() => {
+                    if (hasChanges && !confirm('Ada perubahan yang belum disimpan. Tutup tanpa menyimpan?')) return
+                    setEditorOpen(false)
+                  }}
+                >✕</button>
               </div>
             </div>
 
-            {/* Formula bar + Search bar */}
-            <div style={{ background: '#252b3b', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-              {/* Cell ref */}
-              <div style={{ background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4, padding: '3px 10px', color: '#fff', fontSize: '0.8rem', minWidth: 60, textAlign: 'center' }}>
+            {/* Formula bar + Search */}
+            <div className="editor-formulabar">
+              <div className="editor-cellref">
                 {colLabel(selectedCell.col)}{selectedCell.row + 1}
               </div>
-              <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)' }} />
-              {/* Formula input */}
+              <div className="editor-divider" />
               <input
+                className="editor-formula-input"
                 value={editingCell ? editValue : String(sheetData[selectedCell.row]?.[selectedCell.col] ?? '')}
                 onChange={(e) => { if (!editingCell) setEditingCell(selectedCell); setEditValue(e.target.value) }}
                 onKeyDown={handleCellKeyDown}
-                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: '0.85rem' }}
                 placeholder="Nilai sel..."
               />
-              {/* Divider */}
-              <div style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.15)' }} />
-              {/* Search box */}
-              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.35)', borderRadius: 7, padding: '3px 10px', gap: 6, minWidth: 200 }}>
+              <div className="editor-divider" />
+              <div className="editor-search-box">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
@@ -381,48 +405,48 @@ export default function KelolaPPKSPage() {
                     if (e.key === 'Enter') { e.shiftKey ? goToMatch(-1) : goToMatch(1) }
                     if (e.key === 'Escape') { setEditorSearch(''); setMatchIndices([]); setMatchCursor(0) }
                   }}
-                  style={{ border: 'none', outline: 'none', background: 'transparent', color: '#fff', fontSize: '0.8rem', width: '100%' }}
                 />
-                {/* Hasil pencarian */}
                 {editorSearch && (
-                  <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem', whiteSpace: 'nowrap' }}>
+                  <span className="editor-search-count">
                     {matchIndices.length > 0 ? `${matchCursor + 1}/${matchIndices.length}` : '0'}
                   </span>
                 )}
-                {/* Navigasi prev/next */}
                 {matchIndices.length > 0 && (
                   <>
-                    <button onClick={() => goToMatch(-1)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '0 2px', fontSize: '0.75rem', lineHeight: 1 }}>▲</button>
-                    <button onClick={() => goToMatch(1)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '0 2px', fontSize: '0.75rem', lineHeight: 1 }}>▼</button>
+                    <button className="editor-search-nav" onClick={() => goToMatch(-1)}>▲</button>
+                    <button className="editor-search-nav" onClick={() => goToMatch(1)}>▼</button>
                   </>
                 )}
-                {/* Clear */}
                 {editorSearch && (
-                  <button onClick={() => { setEditorSearch(''); setMatchIndices([]); setMatchCursor(0) }}
-                    style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 0, fontSize: '0.85rem', lineHeight: 1 }}>✕</button>
+                  <button className="editor-search-clear" onClick={() => { setEditorSearch(''); setMatchIndices([]); setMatchCursor(0) }}>✕</button>
                 )}
               </div>
             </div>
 
             {/* Spreadsheet */}
-            <div style={{ flex: 1, overflow: 'auto' }}>
-              <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', fontSize: '0.8rem', minWidth: '100%' }}>
-                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+            <div className="editor-sheet-area">
+              <table className="editor-sheet-table">
+                <thead>
                   <tr>
-                    <th style={{ width: 44, background: '#2d3347', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.4)', fontWeight: 400, padding: '4px 0', textAlign: 'center', position: 'sticky', left: 0, zIndex: 11 }}></th>
+                    <th className="editor-col-corner" />
                     {Array.from({ length: numCols }).map((_, ci) => (
-                      <th key={ci} style={{ width: 120, background: selectedCell.col === ci ? '#3a7d5a' : '#2d3347', border: '1px solid rgba(255,255,255,0.07)', color: selectedCell.col === ci ? '#fff' : 'rgba(255,255,255,0.5)', fontWeight: 600, padding: '4px 8px', textAlign: 'center', userSelect: 'none' }}>
+                      <th
+                        key={ci}
+                        className={`editor-col-header${selectedCell.col === ci ? ' is-selected' : ''}`}
+                      >
                         {colLabel(ci)}
                       </th>
                     ))}
-                    <th style={{ width: 36, background: '#2d3347', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', textAlign: 'center' }}
-                      onClick={() => { setSheetData((prev) => prev.map((r) => [...r, ''])); setHasChanges(true) }}>+</th>
+                    <th
+                      className="editor-col-add"
+                      onClick={() => { setSheetData((prev) => prev.map((r) => [...r, ''])); setHasChanges(true) }}
+                    >+</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sheetData.map((row, ri) => (
                     <tr key={ri}>
-                      <td style={{ background: selectedCell.row === ri ? '#3a7d5a' : '#252b3b', border: '1px solid rgba(255,255,255,0.07)', color: selectedCell.row === ri ? '#fff' : 'rgba(255,255,255,0.35)', textAlign: 'center', fontWeight: 500, fontSize: '0.75rem', padding: '2px 4px', position: 'sticky', left: 0, zIndex: 1, userSelect: 'none' }}>
+                      <td className={`editor-row-number${selectedCell.row === ri ? ' is-selected' : ''}`}>
                         {ri + 1}
                       </td>
                       {row.map((cell, ci) => {
@@ -431,40 +455,55 @@ export default function KelolaPPKSPage() {
                         const isHeader = ri === 0
                         const isMatch = isCellMatch(ri, ci)
                         const isCurrentMatch = isCellCurrentMatch(ri, ci)
+
+                        const cellClass = [
+                          'editor-cell',
+                          isCurrentMatch ? 'is-current-match' : isMatch ? 'is-match' : '',
+                          isSelected ? 'is-selected' : '',
+                          !isSelected && !isMatch && !isCurrentMatch && isHeader ? 'is-header' : '',
+                        ].filter(Boolean).join(' ')
+
                         return (
                           <td
                             key={ci}
                             id={`cell-${ri}-${ci}`}
+                            className={cellClass}
                             onClick={() => handleCellClick(ri, ci)}
                             onDoubleClick={() => handleCellDoubleClick(ri, ci)}
-                            style={{
-                              border: isSelected ? '2px solid #217346' : isCurrentMatch ? '2px solid #facc15' : '1px solid rgba(255,255,255,0.07)',
-                              background: isCurrentMatch ? 'rgba(250,204,21,0.25)' : isMatch ? 'rgba(250,204,21,0.08)' : isSelected ? 'rgba(33,115,70,0.15)' : isHeader ? 'rgba(255,255,255,0.04)' : 'transparent',
-                              color: '#fff', padding: 0, verticalAlign: 'middle', cursor: 'cell', position: 'relative',
-                            }}>
+                          >
                             {isEditing ? (
-                              <input ref={cellInputRef} value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={handleCellKeyDown} onBlur={commitCell}
-                                style={{ width: '100%', height: '100%', background: '#fff', color: '#000', border: 'none', outline: 'none', padding: '3px 8px', fontSize: '0.8rem', boxSizing: 'border-box', minHeight: 26 }} />
+                              <input
+                                ref={cellInputRef}
+                                className="editor-cell-input"
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={handleCellKeyDown}
+                                onBlur={commitCell}
+                              />
                             ) : (
-                              <div style={{ padding: '3px 8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minHeight: 26, lineHeight: '20px', fontWeight: isHeader ? 700 : 400, color: isHeader ? '#a3e4b8' : 'rgba(255,255,255,0.85)' }}>
+                              <div className={`editor-cell-display${isHeader ? ' is-header' : ''}`}>
                                 {String(cell ?? '')}
                               </div>
                             )}
                           </td>
                         )
                       })}
-                      <td style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.07)' }} />
+                      <td className="editor-cell-empty" />
                     </tr>
                   ))}
                   <tr>
-                    <td colSpan={numCols + 2} onClick={() => { setSheetData((prev) => [...prev, Array(numCols).fill('')]); setHasChanges(true) }}
-                      style={{ textAlign: 'center', color: 'rgba(255,255,255,0.25)', cursor: 'pointer', padding: '6px', border: '1px solid rgba(255,255,255,0.07)', fontSize: '0.8rem' }}>
+                    <td
+                      colSpan={numCols + 2}
+                      className="editor-add-row"
+                      onClick={() => { setSheetData((prev) => [...prev, Array(numCols).fill('')]); setHasChanges(true) }}
+                    >
                       + Tambah Baris
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
+
           </div>
         </div>
       )}

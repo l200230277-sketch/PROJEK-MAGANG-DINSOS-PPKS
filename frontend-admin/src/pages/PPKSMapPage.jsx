@@ -2,9 +2,20 @@ import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet'
 import { useEffect, useState, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import L from 'leaflet'
-import heroBackground from '../assets/bg-dinsos.png'
+import heroBackground from '../assets/bg-dinsos.jpeg'
 
 const BOYOLALI_CENTER = [-7.5299, 110.5955]
+
+const JENIS_PPKS = [
+  'Anak Terlantar',
+  'Lansia Terlantar',
+  'Disabilitas',
+  'Fakir Miskin',
+  'Anak Jalanan',
+  'Korban NAPZA',
+  'Gelandangan',
+  'Pengemis',
+]
 
 function FlyAndPopup({ desaGeojson, desaTarget, jumlahPPKSByKecamatan, onHighlight }) {
   const map = useMap()
@@ -19,7 +30,7 @@ function FlyAndPopup({ desaGeojson, desaTarget, jumlahPPKSByKecamatan, onHighlig
     const layer = L.geoJSON(feature)
     const bounds = layer.getBounds()
     const center = bounds.getCenter()
-    map.flyTo(center, 13, { duration: 1.5 })
+    map.flyToBounds(bounds, { duration: 1.5, padding: [40, 40] })
     setTimeout(() => {
       const namaDesa = feature.properties?.NAME_4 || 'Desa'
       const kecamatan = feature.properties?.NAME_3 || 'Kecamatan'
@@ -74,6 +85,36 @@ function FlyToSearch({ data, searchTerm }) {
   return null
 }
 
+function GeoJSONWithClick({ data, jumlahPPKSByKecamatan, onFeatureClick }) {
+  const map = useMap()
+
+  return (
+    <GeoJSON
+      key={data?.features?.length}
+      data={data}
+      style={() => ({
+        color: '#0c6624',
+        weight: 1.5,
+        fillColor: '#25d63f',
+        fillOpacity: 0.6,
+      })}
+      onEachFeature={(_feature, layer) => {
+        const namaDesa = _feature.properties?.NAME_4 || 'Desa'
+        const kecamatan = _feature.properties?.NAME_3 || 'Kecamatan'
+
+        layer.bindTooltip(
+          `<span style="font-size:0.8rem"><strong>${namaDesa}</strong><br/>Kec. ${kecamatan}</span>`,
+          { sticky: true, direction: 'top', offset: [0, -4] }
+        )
+
+        layer.on('mouseover', () => { layer.setStyle({ weight: 2.5, fillOpacity: 0.8 }); layer.bringToFront() })
+        layer.on('mouseout', () => { layer.setStyle({ weight: 1.5, fillOpacity: 0.6 }) })
+        layer.on('click', () => { onFeatureClick(_feature, map, jumlahPPKSByKecamatan) })
+      }}
+    />
+  )
+}
+
 function PPKSMapPage() {
   const [desaGeojson, setDesaGeojson] = useState(null)
   const [searchKec, setSearchKec] = useState('')
@@ -82,12 +123,16 @@ function PPKSMapPage() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [highlightFeature, setHighlightFeature] = useState(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900)
+  const [selectedKecamatan, setSelectedKecamatan] = useState(null)  // ← BARU
   const highlightLayerRef = useRef(null)
   const location = useLocation()
   const queryParams = new URLSearchParams(location.search)
   const searchTerm = (queryParams.get('search') || '').trim()
   const mapRef = useRef(null)
   const inputRef = useRef(null)
+
+  // data detail PPKS per kecamatan — isi sesuai data nyata
+  const dataPPKSDetail = {}
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 900)
@@ -128,8 +173,46 @@ function PPKSMapPage() {
 
   const jumlahPPKSByKecamatan = {}
   kecamatanDariGeoJSON.forEach(kec => { jumlahPPKSByKecamatan[kec] = 0 })
-
   const totalPPKS = Object.values(jumlahPPKSByKecamatan).reduce((a, b) => a + b, 0)
+
+  const handleFeatureClick = (feature, map, ppksData) => {
+    const namaDesa = feature.properties?.NAME_4 || 'Desa'
+    const kecamatan = feature.properties?.NAME_3 || 'Kecamatan'
+    const jumlah = ppksData[kecamatan] ?? 0
+
+    setHighlightFeature(feature)
+    setSearchKec(namaDesa)
+    setDesaTarget(null)
+    setSuggestions([])
+    setShowSuggestions(false)
+
+    const geoLayer = L.geoJSON(feature)
+    const bounds = geoLayer.getBounds()
+    const center = bounds.getCenter()
+    map.flyToBounds(bounds, { duration: 1.2, padding: [40, 40] })
+
+    setTimeout(() => {
+      L.popup()
+        .setLatLng(center)
+        .setContent(`
+          <strong>Desa:</strong> ${namaDesa} <br/>
+          <strong>Kecamatan:</strong> ${kecamatan} <br/>
+          <strong>Jumlah PPKS:</strong>
+          <span
+            class="jumlah-link"
+            style="color:#0c6624;font-weight:bold;cursor:pointer;text-decoration:underline;">
+            ${jumlah}
+          </span>
+        `)
+        .openOn(map)
+
+      // klik angka jumlah di popup → buka modal detail kecamatan
+      setTimeout(() => {
+        const btn = document.querySelector('.jumlah-link')
+        if (btn) btn.onclick = () => setSelectedKecamatan(kecamatan)
+      }, 100)
+    }, 1300)
+  }
 
   const handleSearchChange = (e) => {
     const val = e.target.value
@@ -165,59 +248,60 @@ function PPKSMapPage() {
   return (
     <section
       aria-labelledby="ppks-heading"
-      style={{
-        minHeight: '100vh',
-        backgroundImage: `url(${heroBackground})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: isMobile ? '80px 0 40px' : '72px 0',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
+      className={`ppksmap-section${isMobile ? ' is-mobile' : ''}`}
+      style={{ backgroundImage: `url(${heroBackground})` }}
     >
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.48)', zIndex: 0, pointerEvents: 'none' }} />
+      <div className="ppksmap-overlay" />
 
-      <div className="section-inner" style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+      {/* ── MODAL DETAIL KECAMATAN ── */}
+      {selectedKecamatan && (
+        <div
+          className="ppks-detail-overlay"
+          onClick={(e) => { if (e.target === e.currentTarget) setSelectedKecamatan(null) }}
+        >
+          <div className="ppks-detail-card">
+            <div className="ppks-detail-header">
+              <h3>Detail PPKS Kecamatan {selectedKecamatan}</h3>
+              <button onClick={() => setSelectedKecamatan(null)}>✕</button>
+            </div>
+            <div className="ppks-table-scroll">
+              <table className="ppks-detail-table">
+                <thead>
+                  <tr>
+                    <th>Jenis PPKS</th>
+                    <th>Jumlah</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {JENIS_PPKS.map((jenis, i) => (
+                    <tr key={i}>
+                      <td>{jenis}</td>
+                      <td>{dataPPKSDetail[selectedKecamatan]?.[jenis] || 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={`section-inner ppksmap-inner`}>
         <header className="section-header">
           <h2 id="ppks-heading" className="section-title">
             PETA SEBARAN DAFTAR PPKS KAB. BOYOLALI
           </h2>
         </header>
 
-        <div style={{
-          display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: isMobile ? 16 : 20,
-          alignItems: 'stretch',
-          padding: isMobile ? '0 12px' : '0 24px',
-          boxSizing: 'border-box',
-          width: '100%',
-        }}>
+        <div className={`ppksmap-layout${isMobile ? ' is-mobile' : ''}`}>
 
           {/* ── PETA ── */}
-          <div style={{
-            borderRadius: '16px',
-            background: 'radial-gradient(circle at top left, rgba(79,141,253,0.28), transparent 60%), rgba(4,18,37,0.98)',
-            border: '1px solid rgba(137,199,255,0.3)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-            overflow: 'hidden',
-            flex: isMobile ? 'none' : '1 1 0',
-            width: '100%',
-            minWidth: 0,
-          }}>
+          <div className={`ppksmap-map-card${isMobile ? ' is-mobile' : ''}`}>
             <MapContainer
               center={BOYOLALI_CENTER}
               zoom={11}
               scrollWheelZoom={false}
-              style={{
-                width: '100%',
-                height: isMobile ? '60vw' : '530px',
-                minHeight: isMobile ? '240px' : '530px',
-                display: 'block',
-              }}
+              className={`ppksmap-leaflet${isMobile ? ' is-mobile' : ''}`}
               whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
             >
               <TileLayer
@@ -239,7 +323,7 @@ function PPKSMapPage() {
                       onLayerReady={(layer) => { highlightLayerRef.current = layer }}
                     />
                   )}
-                  <GeoJSON
+                  <GeoJSONWithClick
                     data={{
                       ...desaGeojson,
                       features: !searchTerm
@@ -249,17 +333,8 @@ function PPKSMapPage() {
                             return nama.toLowerCase().includes(searchTerm.toLowerCase())
                           }),
                     }}
-                    style={() => ({ color: '#0c6624', weight: 1.5, fillColor: '#25d63f', fillOpacity: 0.6 })}
-                    onEachFeature={(_feature, layer) => {
-                      const namaDesa = _feature.properties?.NAME_4 || 'Desa'
-                      const kecamatan = _feature.properties?.NAME_3 || 'Kecamatan'
-                      const jumlah = jumlahPPKSByKecamatan[kecamatan] ?? 0
-                      layer.bindPopup(`
-                        <strong>Desa:</strong> ${namaDesa} <br/>
-                        <strong>Kecamatan:</strong> ${kecamatan} <br/>
-                        <strong>Jumlah PPKS:</strong> ${jumlah}
-                      `)
-                    }}
+                    jumlahPPKSByKecamatan={jumlahPPKSByKecamatan}
+                    onFeatureClick={handleFeatureClick}
                   />
                 </>
               )}
@@ -269,41 +344,18 @@ function PPKSMapPage() {
           {/* ── TABEL ── */}
           <aside
             aria-label="Tabel data PPKS"
-            style={{
-              borderRadius: '16px',
-              background: 'rgba(255,255,255,0.18)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.30)',
-              color: '#ffffff',
-              padding: '12px 10px 10px',
-              width: isMobile ? '100%' : '270px',
-              flexShrink: 0,
-              boxSizing: 'border-box',
-              display: 'flex',
-              flexDirection: 'column',
-              height: isMobile ? 'auto' : '530px',  // ← tambah ini
-            }}
+            className={`ppksmap-aside${isMobile ? ' is-mobile' : ''}`}
           >
-            {/* Header */}
-            <div style={{ textAlign: 'center', marginBottom: 8, flexShrink: 0 }}>
-              <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>
-                Data Wilayah per Kecamatan
-              </h3>
-              <p style={{ margin: '3px 0 0', fontSize: '0.8rem', color: 'rgba(255,255,255,0.75)' }}>
+            <div className="ppksmap-aside-header">
+              <h3 className="ppksmap-aside-title">Data Wilayah per Kecamatan</h3>
+              <p className="ppksmap-aside-total">
                 Total PPKS: <strong>{totalPPKS.toLocaleString('id-ID')}</strong> orang
               </p>
             </div>
 
             {/* Search bar */}
-            <div style={{ position: 'relative', marginBottom: 10, flexShrink: 0 }}>
-              <div style={{
-                display: 'flex', alignItems: 'center',
-                background: 'rgba(0,0,0,0.42)',
-                borderRadius: showSuggestions ? '10px 10px 0 0' : '10px',
-                padding: '7px 12px', gap: 8,
-                border: showSuggestions ? '1px solid rgba(255,255,255,0.15)' : '1px solid transparent',
-              }}>
+            <div className="ppksmap-search-wrap">
+              <div className={`ppksmap-search-bar${showSuggestions ? ' has-suggestions' : ''}`}>
                 <input
                   ref={inputRef}
                   type="text"
@@ -312,10 +364,10 @@ function PPKSMapPage() {
                   onChange={handleSearchChange}
                   onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                  style={{ border: 'none', outline: 'none', background: 'transparent', color: '#fff', fontSize: '0.82rem', width: '100%' }}
+                  className="ppksmap-search-input"
                 />
                 {searchKec && (
-                  <button onClick={handleReset} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', padding: 0, fontSize: '0.85rem', lineHeight: 1, flexShrink: 0 }}>✕</button>
+                  <button onClick={handleReset} className="ppksmap-search-clear">✕</button>
                 )}
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                   <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -323,24 +375,16 @@ function PPKSMapPage() {
               </div>
 
               {showSuggestions && (
-                <div style={{
-                  position: 'absolute', top: '100%', left: 0, right: 0,
-                  background: 'rgba(20,25,38,0.97)',
-                  border: '1px solid rgba(255,255,255,0.15)', borderTop: 'none',
-                  borderRadius: '0 0 10px 10px',
-                  zIndex: 999, overflow: 'hidden',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                }}>
-                  <div style={{ padding: '5px 12px 3px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                    Desa — klik untuk ke peta
-                  </div>
+                <div className="ppksmap-suggestions">
+                  <div className="ppksmap-suggestions-label">Desa — klik untuk ke peta</div>
                   {suggestions.map((d, i) => (
-                    <div key={i} onMouseDown={() => handleSelectDesa(d)}
-                      style={{ padding: '8px 12px', cursor: 'pointer', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: 2 }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(79,141,253,0.18)'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
-                      <span style={{ color: '#fff', fontSize: '0.82rem', fontWeight: 500 }}>📍 {d.nama}</span>
-                      <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.72rem' }}>Kec. {d.kecamatan}</span>
+                    <div
+                      key={i}
+                      className="ppksmap-suggestion-item"
+                      onMouseDown={() => handleSelectDesa(d)}
+                    >
+                      <span className="ppksmap-suggestion-name">📍 {d.nama}</span>
+                      <span className="ppksmap-suggestion-kec">Kec. {d.kecamatan}</span>
                     </div>
                   ))}
                 </div>
@@ -348,29 +392,31 @@ function PPKSMapPage() {
             </div>
 
             {/* Tabel scroll */}
-            <div style={{ flex: '1 1 0', overflowY: 'auto', minHeight: 0 }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
-                <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+            <div className="ppksmap-table-scroll">
+              <table className="ppksmap-table">
+                <thead>
                   <tr>
-                    <th style={{ border: '1px solid rgba(255,255,255,0.12)', padding: '6px 10px', background: 'rgba(30,35,50,0.95)', color: 'rgba(255,255,255,0.6)', textAlign: 'left', fontWeight: 600 }}>Kecamatan</th>
-                    <th style={{ border: '1px solid rgba(255,255,255,0.12)', padding: '6px 10px', background: 'rgba(30,35,50,0.95)', color: 'rgba(255,255,255,0.6)', textAlign: 'right', fontWeight: 600 }}>Jumlah</th>
+                    <th>Kecamatan</th>
+                    <th>Jumlah</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredKecamatan.length > 0 ? (
                     filteredKecamatan.map((kec, idx) => (
-                      <tr key={idx}
-                        style={{ background: idx % 2 === 0 ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.02)' }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = idx % 2 === 0 ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.02)'}>
-                        <td style={{ border: '1px solid rgba(255,255,255,0.10)', padding: '6px 10px', color: 'rgba(255,255,255,0.85)' }}>{kec}</td>
-                        <td style={{ border: '1px solid rgba(255,255,255,0.10)', padding: '6px 10px', color: 'rgba(255,255,255,0.85)', textAlign: 'right' }}>{jumlahPPKSByKecamatan[kec]}</td>
+                      <tr key={idx} className={idx % 2 === 0 ? 'row-even' : 'row-odd'}>
+                        <td
+                          style={{ cursor: 'pointer', color: '#0f1117', fontWeight: 600}}
+                          onClick={() => setSelectedKecamatan(kec)}
+                        >
+                          {kec}
+                        </td>
+                        <td>{jumlahPPKSByKecamatan[kec]}</td>
                       </tr>
                     ))
                   ) : kecamatanDariGeoJSON.length === 0 ? (
-                    <tr><td colSpan="2" style={{ textAlign: 'center', padding: '14px 10px', color: 'rgba(255,255,255,0.4)' }}>Memuat data...</td></tr>
+                    <tr><td colSpan="2" className="ppksmap-table-empty">Memuat data...</td></tr>
                   ) : (
-                    <tr><td colSpan="2" style={{ textAlign: 'center', padding: '14px 10px', color: 'rgba(255,255,255,0.4)' }}>Kecamatan tidak ditemukan</td></tr>
+                    <tr><td colSpan="2" className="ppksmap-table-empty">Kecamatan tidak ditemukan</td></tr>
                   )}
                 </tbody>
               </table>
