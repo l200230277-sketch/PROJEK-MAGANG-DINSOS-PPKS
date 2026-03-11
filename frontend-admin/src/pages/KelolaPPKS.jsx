@@ -345,7 +345,6 @@ export default function KelolaPPKSPage() {
         </div>
       </div>
 
-      {/* EXCEL EDITOR MODAL */}
       {editorOpen && (
         <div
           className="editor-backdrop"
@@ -358,7 +357,6 @@ export default function KelolaPPKSPage() {
         >
           <div className="editor-modal">
 
-            {/* Title bar */}
             <div className="editor-titlebar">
               <div className="editor-titlebar-left">
                 <div className="editor-excel-icon"><span>X</span></div>
@@ -377,7 +375,6 @@ export default function KelolaPPKSPage() {
               </div>
             </div>
 
-            {/* Formula bar + Search */}
             <div className="editor-formulabar">
               <div className="editor-cellref">
                 {colLabel(selectedCell.col)}{selectedCell.row + 1}
@@ -423,7 +420,6 @@ export default function KelolaPPKSPage() {
               </div>
             </div>
 
-            {/* Spreadsheet */}
             <div className="editor-sheet-area">
               <table className="editor-sheet-table">
                 <thead>

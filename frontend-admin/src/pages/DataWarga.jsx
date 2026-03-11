@@ -1,294 +1,60 @@
 import bgDinsos from '../assets/bg-dinsos.jpeg'
 import { useLocation } from "react-router-dom"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import * as XLSX from "xlsx"
+import axios from "axios"
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 export default function DataWarga() {
   const location = useLocation()
   const params = new URLSearchParams(location.search)
   const desa = params.get("desa")
+
   const [search, setSearch] = useState("")
+  const [data, setData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  console.log("Desa:", desa)
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const queryParams = new URLSearchParams()
+        if (desa) queryParams.append("desa", `eq.${desa}`)
+        queryParams.append("order", "id.asc")
 
-  const data = [
-    {
-      id: 1,
-      nama: "Budi Santoso menawan rupawan sekali",
-      nik: "3312345678900001",
-      jk: "Laki-laki",
-      kode_pmks: "PMKS01",
-      jenis_pmks: "Fakir Miskin",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Sokawoya rt 06/ rw 03, canden, sambi, boyolali"
-    },
-    {
-      id: 2,
-      nama: "Siti Aminah",
-      nik: "3312345678900002",
-      jk: "Perempuan",
-      kode_pmks: "PMKS02",
-      jenis_pmks: "Lansia Terlantar",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Melati No 5"
-    },
-   {
-      id: 3,
-      nama: "Budi Santoso",
-      nik: "3312345678900001",
-      jk: "Laki-laki",
-      kode_pmks: "PMKS01",
-      jenis_pmks: "Fakir Miskin",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Mawar No 10"
-    },
-    {
-      id: 4,
-      nama: "Siti Aminah",
-      nik: "3312345678900002",
-      jk: "Perempuan",
-      kode_pmks: "PMKS02",
-      jenis_pmks: "Lansia Terlantar",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Melati No 5"
-    },
-    {
-      id: 5,
-      nama: "Budi Santoso",
-      nik: "3312345678900001",
-      jk: "Laki-laki",
-      kode_pmks: "PMKS01",
-      jenis_pmks: "Fakir Miskin",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Mawar No 10"
-    },
-    {
-      id: 6,
-      nama: "Siti Aminah",
-      nik: "3312345678900002",
-      jk: "Perempuan",
-      kode_pmks: "PMKS02",
-      jenis_pmks: "Lansia Terlantar",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Melati No 5"
-    },
-    {
-      id: 7,
-      nama: "Budi Santoso",
-      nik: "3312345678900001",
-      jk: "Laki-laki",
-      kode_pmks: "PMKS01",
-      jenis_pmks: "Fakir Miskin",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Mawar No 10"
-    },
-    {
-      id: 8,
-      nama: "Siti Aminah",
-      nik: "3312345678900002",
-      jk: "Perempuan",
-      kode_pmks: "PMKS02",
-      jenis_pmks: "Lansia Terlantar",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Melati No 5"
-    },
-    {
-      id: 9,
-      nama: "Budi Santoso",
-      nik: "3312345678900001",
-      jk: "Laki-laki",
-      kode_pmks: "PMKS01",
-      jenis_pmks: "Fakir Miskin",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Mawar No 10"
-    },
-    {
-      id: 10,
-      nama: "Siti Aminah",
-      nik: "3312345678900002",
-      jk: "Perempuan",
-      kode_pmks: "PMKS02",
-      jenis_pmks: "Lansia Terlantar",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Melati No 5"
-    },
-    {
-      id: 11,
-      nama: "Budi Santoso",
-      nik: "3312345678900001",
-      jk: "Laki-laki",
-      kode_pmks: "PMKS01",
-      jenis_pmks: "Fakir Miskin",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Mawar No 10"
-    },
-    {
-      id: 12,
-      nama: "Siti Aminah",
-      nik: "3312345678900002",
-      jk: "Perempuan",
-      kode_pmks: "PMKS02",
-      jenis_pmks: "Lansia Terlantar",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Melati No 5"
-    },
-    {
-      id: 13,
-      nama: "Budi Santoso",
-      nik: "3312345678900001",
-      jk: "Laki-laki",
-      kode_pmks: "PMKS01",
-      jenis_pmks: "Fakir Miskin",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Mawar No 10"
-    },
-    {
-      id: 14,
-      nama: "Siti Aminah",
-      nik: "3312345678900002",
-      jk: "Perempuan",
-      kode_pmks: "PMKS02",
-      jenis_pmks: "Lansia Terlantar",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Melati No 5"
-    },
-    {
-      id: 15,
-      nama: "Budi Santoso",
-      nik: "3312345678900001",
-      jk: "Laki-laki",
-      kode_pmks: "PMKS01",
-      jenis_pmks: "Fakir Miskin",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Mawar No 10"
-    },
-    {
-      id: 16,
-      nama: "Siti Aminah",
-      nik: "3312345678900002",
-      jk: "Perempuan",
-      kode_pmks: "PMKS02",
-      jenis_pmks: "Lansia Terlantar",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Melati No 5"
-    },
-    {
-      id: 17,
-      nama: "Budi Santoso",
-      nik: "3312345678900001",
-      jk: "Laki-laki",
-      kode_pmks: "PMKS01",
-      jenis_pmks: "Fakir Miskin",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Mawar No 10"
-    },
-    {
-      id: 18,
-      nama: "Siti Aminah",
-      nik: "3312345678900002",
-      jk: "Perempuan",
-      kode_pmks: "PMKS02",
-      jenis_pmks: "Lansia Terlantar",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Melati No 5"
-    },
-    {
-      id: 19,
-      nama: "Budi Santoso",
-      nik: "3312345678900001",
-      jk: "Laki-laki",
-      kode_pmks: "PMKS01",
-      jenis_pmks: "Fakir Miskin",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Mawar No 10"
-    },
-    {
-      id: 20,
-      nama: "Siti Aminah",
-      nik: "3312345678900002",
-      jk: "Perempuan",
-      kode_pmks: "PMKS02",
-      jenis_pmks: "Lansia Terlantar",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Melati No 5"
-    },
-    {
-      id: 21,
-      nama: "Budi Santoso",
-      nik: "3312345678900001",
-      jk: "Laki-laki",
-      kode_pmks: "PMKS01",
-      jenis_pmks: "Fakir Miskin",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Mawar No 10"
-    },
-    {
-      id: 22,
-      nama: "Siti Aminah",
-      nik: "3312345678900002",
-      jk: "Perempuan",
-      kode_pmks: "PMKS02",
-      jenis_pmks: "Lansia Terlantar",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Melati No 5"
-    },
-    {
-      id: 23,
-      nama: "Budi Santoso",
-      nik: "3312345678900001",
-      jk: "Laki-laki",
-      kode_pmks: "PMKS01",
-      jenis_pmks: "Fakir Miskin",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Mawar No 10"
-    },
-    {
-      id: 24,
-      nama: "Siti Aminah",
-      nik: "3312345678900002",
-      jk: "Perempuan",
-      kode_pmks: "PMKS02",
-      jenis_pmks: "Lansia Terlantar",
-      kecamatan: "Sambi",
-      desa: "Canden",
-      alamat: "Jl. Melati No 5"
-    },
-  ]
+        const res = await axios.get(
+          `${SUPABASE_URL}/rest/v1/warga?${queryParams.toString()}`,
+          {
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              "Content-Type": "application/json"
+            }
+          }
+        )
+        setData(res.data)
+      } catch (err) {
+        setError("Gagal mengambil data. Coba refresh halaman.")
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const filtered = data
-    .filter(d => !desa || d.desa === desa)
-    .filter(d =>
-      d.nama.toLowerCase().includes(search.toLowerCase()) ||
-      d.nik.includes(search) ||
-      d.alamat.toLowerCase().includes(search.toLowerCase()) ||
-      d.jenis_pmks.toLowerCase().includes(search.toLowerCase()) 
-    )
+    fetchData()
+  }, [desa])
 
-  // 🔽 FUNGSI DOWNLOAD EXCEL
+  const filtered = data.filter(d =>
+    d.nama.toLowerCase().includes(search.toLowerCase()) ||
+    d.nik.includes(search) ||
+    d.alamat.toLowerCase().includes(search.toLowerCase()) ||
+    d.jenis_pmks.toLowerCase().includes(search.toLowerCase())
+  )
+
   const downloadExcel = () => {
     const worksheetData = filtered.map((d) => ({
       ID: d.id,
@@ -304,156 +70,80 @@ export default function DataWarga() {
 
     const worksheet = XLSX.utils.json_to_sheet(worksheetData)
     const workbook = XLSX.utils.book_new()
-
     XLSX.utils.book_append_sheet(workbook, worksheet, "Data Warga")
-
     XLSX.writeFile(workbook, `data_warga_${desa || "semua"}.xlsx`)
   }
 
   return (
-    <section style={{ position: "relative", minHeight: "100vh", padding: "5px 40px" }}>
+    <section className="datawarga-section">
 
-      {/* Background */}
       <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: `url(${bgDinsos})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          filter: "blur(4px)",
-          transform: "scale(1.1)",
-          zIndex: 0
-        }}
+        className="datawarga-bg"
+        style={{ backgroundImage: `url(${bgDinsos})` }}
       />
 
-      {/* Overlay */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "rgba(0,0,0,0.4)",
-          zIndex: 1
-        }}
-      />
+      <div className="datawarga-overlay" />
 
-      {/* Content */}
-      <div style={{ position: "relative", zIndex: 2, color: "#fbfeff", textAlign: "center" }}>
-        <h2
-          style={{
-            position: "relative",
-            top: "20px"
-          }}
-        >
-          Data Warga Desa {desa}
-        </h2>
+      <div className="datawarga-content">
+        <h2 className="datawarga-title">Data Warga Desa {desa}</h2>
 
-        {/* 🔽 TOMBOL DOWNLOAD */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            marginBottom: "20px",
-            gap: "10px"
-          }}
-        >
-
-          {/* SEARCH */}
+        <div className="datawarga-toolbar">
           <input
             type="text"
             placeholder="Search nama / NIK / alamat..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{
-              padding: "10px",
-              borderRadius: "6px",
-              border: "none",
-              outline: "none",
-              width: "230px",
-              maxWidth: "100%",
-              backgroundColor: "#182229",
-              color: "#fff",
-            }}
+            className="modal-warga-search"
           />
-
-          {/* DOWNLOAD */}
-          <button
-            onClick={downloadExcel}
-            style={{
-              padding: "10px 10px",
-              background: "#182229",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer"
-            }}
-          >
+          <button onClick={downloadExcel} className="modal-warga-download-btn">
             Download
           </button>
-
         </div>
-      {/* WRAPPER SCROLL */}
-      <div
-        style={{
-          maxHeight: "500px",
-          overflowY: "auto",
-          overflowX: "auto",
-          marginTop: "10px",
-          borderRadius: "8px"
-        }}
-      >
-        <table
-          style={{
-            width: "100%",
-            color: "black",
-            borderCollapse: "collapse",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-            fontSize: "12px"
-          }}
-        >
-          <thead
-            style={{
-              background: "#6f7578",
-              color: "white",
-              position: "sticky",
-              top: 0,
-              borderTop: "2px solid #555"
-            }}
-          >
-            <tr style={{ borderTop: "2px solid #555"}}></tr>
-              <tr>
-                <th style={{ border: "1px solid #555", padding: "8px" }}>ID</th>
-                <th style={{ border: "1px solid #555", padding: "8px" }}>Nama</th>
-                <th style={{ border: "1px solid #555", padding: "8px" }}>NIK</th>
-                <th style={{ border: "1px solid #555", padding: "8px" }}>Jenis Kelamin</th>
-                <th style={{ border: "1px solid #555", padding: "8px" }}>Kode PMKS</th>
-                <th style={{ border: "1px solid #555", padding: "8px" }}>Jenis PMKS</th>
-                <th style={{ border: "1px solid #555", padding: "8px" }}>Kecamatan</th>
-                <th style={{ border: "1px solid #555", padding: "8px" }}>Desa</th>
-                <th style={{ border: "1px solid #555", padding: "8px" }}>Alamat</th>
-              </tr>
-            </thead>
 
-          <tbody style={{ background: "#acb0b3" }}>
-            {filtered.map((d) => (
-              <tr 
-                key={d.id}
-                onMouseEnter={(e) => e.currentTarget.style.background = "#9aa0a3"}
-                onMouseLeave={(e) => e.currentTarget.style.background = "#acb0b3"}>
-                <td style={{ border: "1px solid #555", padding: "8px" }}>{d.id}</td>
-                <td style={{ border: "1px solid #555", padding: "8px" }}>{d.nama}</td>
-                <td style={{ border: "1px solid #555", padding: "8px" }}>{d.nik}</td>
-                <td style={{ border: "1px solid #555", padding: "8px" }}>{d.jk}</td>
-                <td style={{ border: "1px solid #555", padding: "8px" }}>{d.kode_pmks}</td>
-                <td style={{ border: "1px solid #555", padding: "8px" }}>{d.jenis_pmks}</td>
-                <td style={{ border: "1px solid #555", padding: "8px" }}>{d.kecamatan}</td>
-                <td style={{ border: "1px solid #555", padding: "8px" }}>{d.desa}</td>
-                <td style={{ border: "1px solid #555", padding: "8px" }}>{d.alamat}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        {loading && (
+          <p className="modal-warga-status modal-warga-loading">⏳ Memuat data...</p>
+        )}
+
+        {error && (
+          <p className="modal-warga-status modal-warga-error">⚠️ {error}</p>
+        )}
+
+        {!loading && !error && (
+          <div className="modal-warga-table-wrap">
+            <table className="modal-warga-table">
+              <thead>
+                <tr>
+                  {['ID','Nama','NIK','Jenis Kelamin','Kode PMKS','Jenis PMKS','Kecamatan','Desa','Alamat'].map(h => (
+                    <th key={h}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="modal-warga-empty">
+                      Data tidak ditemukan.
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((d) => (
+                    <tr key={d.id}>
+                      <td>{d.id}</td>
+                      <td>{d.nama}</td>
+                      <td>{d.nik}</td>
+                      <td>{d.jk}</td>
+                      <td>{d.kode_pmks}</td>
+                      <td>{d.jenis_pmks}</td>
+                      <td>{d.kecamatan}</td>
+                      <td>{d.desa}</td>
+                      <td>{d.alamat}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </section>
   )
