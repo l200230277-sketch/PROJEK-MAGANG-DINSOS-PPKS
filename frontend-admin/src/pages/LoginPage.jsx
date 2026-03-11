@@ -39,7 +39,6 @@ export default function LoginPage({ onLogin }) {
     >
       <div className="login-overlay" />
 
-      {/* Logo + judul */}
       <div className="login-brand">
         <img
           src={logoBoyolali}
@@ -50,11 +49,9 @@ export default function LoginPage({ onLogin }) {
         <p className="login-brand-subtitle">Kabupaten Boyolali</p>
       </div>
 
-      {/* Card login */}
       <div className="login-card">
         <h2 className="login-card-title">LOGIN</h2>
 
-        {/* Input username */}
         <div className="login-input-wrap">
           <span className="login-input-icon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -72,7 +69,6 @@ export default function LoginPage({ onLogin }) {
           />
         </div>
 
-        {/* Input password */}
         <div className="login-input-wrap">
           <span className="login-input-icon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -90,10 +86,8 @@ export default function LoginPage({ onLogin }) {
           />
         </div>
 
-        {/* Pesan error */}
         {error && <p className="login-error">{error}</p>}
 
-        {/* Tombol submit */}
         <div className="login-submit-wrap">
           <button
             onClick={handleSubmit}

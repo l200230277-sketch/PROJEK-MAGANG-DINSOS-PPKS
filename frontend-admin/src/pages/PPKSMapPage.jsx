@@ -18,7 +18,6 @@ const JENIS_PPKS = [
   'Pengemis',
 ]
 
-// ── DATA DUMMY (salin dari DataWarga.jsx — nanti ganti fetch API) ─────────────
 const ALL_WARGA = [
   { id: 1,  nama: "Budi Santoso menawan rupawan sekali", nik: "3312345678900001", jk: "Laki-laki", kode_pmks: "PMKS01", jenis_pmks: "Fakir Miskin",     kecamatan: "Sambi", desa: "Canden", alamat: "Sokawoya rt 06/ rw 03, canden, sambi, boyolali" },
   { id: 2,  nama: "Siti Aminah",  nik: "3312345678900002", jk: "Perempuan", kode_pmks: "PMKS02", jenis_pmks: "Lansia Terlantar", kecamatan: "Sambi", desa: "Canden", alamat: "Jl. Melati No 5" },
@@ -46,7 +45,6 @@ const ALL_WARGA = [
   { id: 24, nama: "Siti Aminah",  nik: "3312345678900002", jk: "Perempuan", kode_pmks: "PMKS02", jenis_pmks: "Lansia Terlantar", kecamatan: "Sambi", desa: "Canden", alamat: "Jl. Melati No 5" },
 ]
 
-// ── MODAL DATA WARGA — style persis DataWarga.jsx ─────────────────────────────
 function ModalDataWarga({ desa, onClose }) {
   const [search, setSearch] = useState('')
 
@@ -86,7 +84,6 @@ function ModalDataWarga({ desa, onClose }) {
         padding: '5px 40px',
       }}
     >
-      {/* Background blur — sama persis DataWarga */}
       <div style={{
         position: 'absolute', inset: 0,
         backgroundImage: `url(${heroBackground})`,
@@ -98,13 +95,11 @@ function ModalDataWarga({ desa, onClose }) {
         background: 'rgba(0,0,0,0.4)', zIndex: 1,
       }} />
 
-      {/* Content wrapper — sama persis DataWarga */}
       <div style={{
         position: 'relative', zIndex: 2,
         color: '#fbfeff', textAlign: 'center',
         width: '100%', maxWidth: '1100px',
       }}>
-        {/* Tombol tutup */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '4px' }}>
           <button
             onClick={onClose}
@@ -120,7 +115,6 @@ function ModalDataWarga({ desa, onClose }) {
           Data Warga Desa {desa}
         </h2>
 
-        {/* Search + Download */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px', gap: '10px' }}>
           <input
             type="text"
@@ -142,7 +136,6 @@ function ModalDataWarga({ desa, onClose }) {
           >Download</button>
         </div>
 
-        {/* Tabel scroll */}
         <div style={{
           maxHeight: '500px', overflowY: 'auto', overflowX: 'auto',
           marginTop: '10px', borderRadius: '8px',
@@ -189,9 +182,6 @@ function ModalDataWarga({ desa, onClose }) {
   )
 }
 
-// ── KOMPONEN PETA ─────────────────────────────────────────────────────────────
-
-// ✅ FIX: tambah prop onJumlahClick supaya hyperlink di popup bisa buka modal
 function FlyAndPopup({ desaGeojson, desaTarget, jumlahPPKSByDesa, onHighlight, onJumlahClick }) {
   const map = useMap()
   useEffect(() => {
@@ -222,7 +212,6 @@ function FlyAndPopup({ desaGeojson, desaTarget, jumlahPPKSByDesa, onHighlight, o
         .openOn(map)
       onHighlight(feature)
 
-      // ✅ FIX: pasang onclick ke hyperlink setelah popup render
       setTimeout(() => {
         const btn = document.querySelector('.jumlah-link')
         if (btn) {
@@ -288,8 +277,6 @@ function GeoJSONWithClick({ data, jumlahPPKSByDesa, onFeatureClick }) {
   )
 }
 
-// ── HALAMAN UTAMA ─────────────────────────────────────────────────────────────
-
 function PPKSMapPage() {
   const [desaGeojson, setDesaGeojson] = useState(null)
   const [searchKec, setSearchKec] = useState('')
@@ -310,7 +297,6 @@ function PPKSMapPage() {
 
   const dataPPKSDetail = {}
 
-  // Hitung jumlah PPKS per desa dari data dummy
   const jumlahPPKSByDesa = {}
   ALL_WARGA.forEach(w => {
     jumlahPPKSByDesa[w.desa] = (jumlahPPKSByDesa[w.desa] || 0) + 1
@@ -353,7 +339,6 @@ function PPKSMapPage() {
         .filter(d => d.nama)
     : []
 
-  // Jumlah per kecamatan (untuk tabel aside) — aggregate dari data dummy
   const jumlahPPKSByKecamatan = {}
   kecamatanDariGeoJSON.forEach(kec => { jumlahPPKSByKecamatan[kec] = 0 })
   ALL_WARGA.forEach(w => {
@@ -362,7 +347,6 @@ function PPKSMapPage() {
   })
   const totalPPKS = Object.values(jumlahPPKSByKecamatan).reduce((a, b) => a + b, 0)
 
-  // ── Klik desa di peta ──
   const handleFeatureClick = (feature, map, ppksByDesa) => {
     const namaDesa = feature.properties?.NAME_4 || 'Desa'
     const kecamatan = feature.properties?.NAME_3 || 'Kecamatan'
@@ -393,7 +377,6 @@ function PPKSMapPage() {
         `)
         .openOn(map)
 
-      // Klik angka jumlah → buka modal data warga desa
       setTimeout(() => {
         const btn = document.querySelector('.jumlah-link')
         if (btn) {
@@ -453,7 +436,6 @@ function PPKSMapPage() {
         />
       )}
 
-      {/* ── MODAL DETAIL KECAMATAN ── */}
       {selectedKecamatan && (
         <div
           className="ppks-detail-overlay"
@@ -495,7 +477,6 @@ function PPKSMapPage() {
 
         <div className={`ppksmap-layout${isMobile ? ' is-mobile' : ''}`}>
 
-          {/* ── PETA ── */}
           <div className={`ppksmap-map-card${isMobile ? ' is-mobile' : ''}`}>
             <MapContainer
               center={BOYOLALI_CENTER}
@@ -511,7 +492,6 @@ function PPKSMapPage() {
               {desaGeojson && (
                 <>
                   <FlyToSearch data={desaGeojson} searchTerm={searchTerm} />
-                  {/* ✅ FIX: tambah prop onJumlahClick */}
                   <FlyAndPopup
                     desaGeojson={desaGeojson}
                     desaTarget={desaTarget}
@@ -543,7 +523,6 @@ function PPKSMapPage() {
             </MapContainer>
           </div>
 
-          {/* ── TABEL KECAMATAN ── */}
           <aside
             aria-label="Tabel data PPKS"
             className={`ppksmap-aside${isMobile ? ' is-mobile' : ''}`}
