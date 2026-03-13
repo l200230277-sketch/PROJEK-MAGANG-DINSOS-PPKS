@@ -1,5 +1,5 @@
 import bgDinsos from '../assets/bg-dinsos.jpeg'
-import { useLocation } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { useState } from "react"
 import * as XLSX from "xlsx"
 
@@ -9,7 +9,7 @@ export default function DataWarga() {
   const params = new URLSearchParams(location.search)
   const desa = params.get("desa")
   const [search, setSearch] = useState("")
-
+  const navigate = useNavigate()
   console.log("Desa:", desa)
 
   const data = [
@@ -391,7 +391,21 @@ export default function DataWarga() {
           >
             Download
           </button>
-
+          {/* ❌ TOMBOL CLOSE / KEMBALI */}
+          <button
+            onClick={() => navigate("/ppks")} // Arahkan ke path /ppks
+            style={{
+              padding: "10px 15px",
+              backgroundColor: "#9d0808",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontWeight: "bold"
+            }}
+          >
+            Keluar
+          </button>
         </div>
       {/* WRAPPER SCROLL */}
       <div

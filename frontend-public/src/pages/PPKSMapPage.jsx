@@ -56,6 +56,8 @@ function PPKSMapPage() {
   const [desaGeojson, setDesaGeojson] = useState(null)
   const [selectedKecamatan, setSelectedKecamatan] = useState(null)
   const [selectedFeature, setSelectedFeature] = useState(null)
+  const [jumlahPPKSByKecamatan, setJumlahPPKSByKecamatan] = useState({}) 
+  const [totalPPKS, setTotalPPKS] = useState(0)
   const location = useLocation()
   const navigate = useNavigate()
   const queryParams = new URLSearchParams(location.search)
@@ -102,10 +104,12 @@ function PPKSMapPage() {
   const kecamatanDariGeoJSON = desaGeojson
   ? Array.from(new Set(desaGeojson.features.map(f => f.properties?.NAME_3)))
   : []
-  const jumlahPPKSByKecamatan = {}
-  kecamatanDariGeoJSON.forEach(kec => {
-    jumlahPPKSByKecamatan[kec] = 0
-  })
+
+  useEffect(() => { 
+    const total = Object.values(jumlahPPKSByKecamatan).reduce( 
+      (sum, val) => sum + (val || 0), 0 )
+    setTotalPPKS(total)
+  }, [jumlahPPKSByKecamatan])
 
   const jenisPPKS = [
     "Anak Terlantar",
@@ -285,7 +289,7 @@ function PPKSMapPage() {
           <aside className="ppks-table-card" aria-label="Tabel data PPKS">
             <div className="ppks-table-header">
               <h3>Data Wilayah per Kecamatan</h3>
-              <p>Total Kecamatan {desaGeojson ? new Set(desaGeojson.features.map(f => f.properties?.NAME_3)).size : 0}</p>
+              <p>Total PPKS {totalPPKS}</p>
             </div>
             <div className="ppks-table-wrapper">
               <table className="ppks-table">

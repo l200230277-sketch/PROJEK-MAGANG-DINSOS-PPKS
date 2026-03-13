@@ -8,7 +8,7 @@ import ContactPage from './pages/ContactPage.jsx'
 import DataWarga from './pages/DataWarga.jsx'
 import logoBoyolali from './assets/logo-boyolali.png'
 import heroBackground from './assets/bg-dinsos.jpeg'
-
+import searchIcon from './assets/tombol-search.png'
 function App() {
   const [scrollY, setScrollY] = useState(0)
   const location = useLocation()
@@ -42,7 +42,7 @@ function App() {
 
   return (
     <div className="page" style={{ '--hero-bg-image': `url(${heroBackground})` }}>
-      <header className={`site-header ${hideHeader ? 'site-header--hidden' : ''}`}>
+      <header className={`site-header ${scrollY > 8 ? 'site-header--scrolled' : ''}`}>
         <div className="site-header-inner">
           <button
             className="brand-mini"
@@ -100,9 +100,11 @@ function App() {
                   }
                 }}
               />
-              <span className="nav-search-icon" aria-hidden="true">
-                🔍
-              </span>
+              <img
+                src={searchIcon}
+                alt="Search"
+                className="nav-tombol-search"
+              />
             </div>
           </nav>
         </div>
